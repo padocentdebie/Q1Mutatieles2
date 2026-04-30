@@ -11,6 +11,7 @@
             --secondary: #f0f2f5;
             --accent: #d32f2f;
             --text: #333;
+            --white: #ffffff;
         }
 
         body { 
@@ -29,7 +30,8 @@
             padding: 10px;
             display: none;
             justify-content: center;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
             z-index: 2000;
         }
 
@@ -37,14 +39,15 @@
             background: rgba(255,255,255,0.2);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             transition: 0.3s;
+            font-size: 0.9em;
         }
 
-        .nav-btn.active { background: white; color: var(--primary); }
+        .nav-btn.active { background: var(--white); color: var(--primary); }
 
         /* Schermen */
         .screen {
@@ -53,6 +56,7 @@
             width: 100%;
             height: calc(100vh - 60px);
             position: relative;
+            overflow-y: auto;
         }
 
         .screen.active { display: flex; flex-direction: column; }
@@ -67,7 +71,7 @@
 
         .draggable-label {
             position: absolute;
-            background: white;
+            background: var(--white);
             border: 2px solid var(--primary);
             padding: 10px 15px;
             border-radius: 8px;
@@ -80,26 +84,53 @@
             align-items: center;
             gap: 10px;
             white-space: nowrap;
-            transition: transform 0.1s, box-shadow 0.1s;
-            touch-action: none; /* Voorkomt scrollen tijdens dragen */
+            touch-action: none;
         }
 
-        .draggable-label:active {
-            cursor: grabbing;
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            z-index: 1001;
+        .delete-icon { color: var(--accent); cursor: pointer; }
+
+        /* Content & Oefeningen */
+        .content-container { 
+            padding: 30px; 
+            max-width: 900px; 
+            margin: 20px auto; 
+            background: var(--white); 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
         }
 
-        .delete-icon {
-            color: var(--accent);
-            cursor: pointer;
-            font-size: 1.1em;
-            margin-left: 5px;
+        .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
+
+        /* Invuloefening Stijl */
+        .exercise-block {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .exercise-block h4 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            align-items: center;
+            margin: 8px 0;
+            gap: 10px;
+        }
+
+        .input-row label { font-weight: 500; font-size: 0.9em; }
+        .exercise-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .control-panel {
-            background: #fff;
+            background: var(--white);
             padding: 10px;
             display: flex;
             justify-content: center;
@@ -114,12 +145,8 @@
             background: linear-gradient(135deg, #003082 0%, #0056b3 100%);
             height: 100vh;
         }
-        .login-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 350px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-
-        /* Content */
-        .content-container { padding: 40px; max-width: 800px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
-        .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
+        .login-box { background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 350px; }
+        input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
 
         iframe, embed { width: 100%; height: 100%; border: none; }
     </style>
@@ -129,8 +156,9 @@
     <nav id="main-nav">
         <button class="nav-btn active" onclick="showScreen(2)">1. Uitleg</button>
         <button class="nav-btn" onclick="showScreen(3)">2. Digibord</button>
-        <button class="nav-btn" onclick="showScreen(4)">3. Oefening</button>
-        <button class="nav-btn" onclick="showScreen(5)">4. PDF Bron</button>
+        <button class="nav-btn" onclick="showScreen(4)">3. Tekst-delen</button>
+        <button class="nav-btn" onclick="showScreen(5)">4. PDF Zinsdelen</button>
+        <button class="nav-btn" onclick="showScreen(6)">5. Invuloefening</button>
     </nav>
 
     <!-- Scherm 1: Login -->
@@ -141,18 +169,12 @@
                 <input type="text" id="studentName" placeholder="Je voornaam...">
                 <select id="classSelect">
                     <option value="" disabled selected>Kies je klas...</option>
-                    <option value="Alpha">Alpha</option>
-                    <option value="Bravo">Bravo</option>
-                    <option value="Charlie">Charlie</option>
-                    <option value="Delta">Delta</option>
-                    <option value="Echo">Echo</option>
-                    <option value="Foxtrot">Foxtrot</option>
-                    <option value="Golf">Golf</option>
-                    <option value="Hotel">Hotel</option>
-                    <option value="Juliet">Juliet</option>
-                    <option value="Kilo">Kilo</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Mike">Mike</option>
+                    <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option>
+                    <option value="Charlie">Charlie</option><option value="Delta">Delta</option>
+                    <option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option>
+                    <option value="Golf">Golf</option><option value="Hotel">Hotel</option>
+                    <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option>
+                    <option value="Lima">Lima</option><option value="Mike">Mike</option>
                 </select>
                 <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Start de les</button>
             </div>
@@ -192,7 +214,7 @@
         </div>
     </div>
 
-    <!-- Scherm 4: Oefening -->
+    <!-- Scherm 4: Oefening Tekstdelen -->
     <div id="screen-4" class="screen">
         <iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe>
         <div id="label-layer-4" class="drag-layer"></div>
@@ -201,12 +223,92 @@
         </div>
     </div>
 
-    <!-- Scherm 5: PDF Bron -->
+    <!-- Scherm 5: PDF Bron Zinsdelen -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
         <div class="control-panel">
             <button onclick="spawnLabels(5)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Nieuwe zinsdelen</button>
+        </div>
+    </div>
+
+    <!-- Scherm 6: Invuloefening -->
+    <div id="screen-6" class="screen">
+        <div class="content-container">
+            <h2>Zinsdelen invullen</h2>
+            <p>Vul per zin de juiste zinsdelen in.</p>
+
+            <!-- Zin 1 -->
+            <div class="exercise-block">
+                <h4>1. De trainer geeft uitleg aan de spelersgroep van Ajax.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-1-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-2-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-3-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-4-"></div>
+            </div>
+
+            <!-- Zin 2 -->
+            <div class="exercise-block">
+                <h4>2. Die verpleegster verzorgt de patiënt, het kind en de dokter.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-5-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-6-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-7-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-8-"></div>
+            </div>
+
+            <!-- Zin 3 -->
+            <div class="exercise-block">
+                <h4>3. Zijn vriendin koopt een kaartje voor de film.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-9-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-10-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-11-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-12-"></div>
+            </div>
+
+            <!-- Zin 4 -->
+            <div class="exercise-block">
+                <h4>4. Graag drink ik in het weekeinde een glaasje wijn of een lekkere likeur.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-13-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-14-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-15-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-16-"></div>
+            </div>
+
+            <!-- Zin 5 -->
+            <div class="exercise-block">
+                <h4>5. Kun je die brief nu wel goed lezen?</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-17-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-18-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-19-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-20-"></div>
+            </div>
+
+            <!-- Zin 6 -->
+            <div class="exercise-block">
+                <h4>6. Zij zette zojuist de tv aan.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-21-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-22-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-23-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-24-"></div>
+            </div>
+
+            <!-- Zin 7 -->
+            <div class="exercise-block">
+                <h4>7. Mijn dochter krijgt vanmiddag haar diploma.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-25-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-26-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-27-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-28-"></div>
+            </div>
+
+            <!-- Zin 8 -->
+            <div class="exercise-block">
+                <h4>8. Hij kan het huis nu echt niet vinden op de kaart.</h4>
+                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-29-"></div>
+                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-30-"></div>
+                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-31-"></div>
+                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-32-"></div>
+            </div>
         </div>
     </div>
 
@@ -228,7 +330,6 @@
         let offset = { x: 0, y: 0 };
         window.currentClass = "";
 
-        // LOGIN
         window.login = () => {
             const name = document.getElementById('studentName').value;
             const klas = document.getElementById('classSelect').value;
@@ -239,7 +340,6 @@
             setupSync();
         };
 
-        // NAVIGATIE
         window.showScreen = (n) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             const targetScreen = document.getElementById(`screen-${n}`);
@@ -249,7 +349,6 @@
             });
         };
 
-        // SYNC
         function setupSync() {
             [4, 5].forEach(screenId => {
                 onValue(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), (snap) => {
@@ -284,7 +383,6 @@
                 if (activeId !== id) return;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                
                 update(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`), {
                     x: clientX - offset.x,
                     y: clientY - offset.y
@@ -302,11 +400,8 @@
                 const rect = el.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                
-                // Bereken waar in het label je klikt, zodat hij niet verspringt
                 offset.x = clientX - rect.left;
                 offset.y = clientY - rect.top;
-
                 window.addEventListener('mousemove', handleMove);
                 window.addEventListener('touchmove', handleMove);
                 window.addEventListener('mouseup', stopMove, {once:true});
