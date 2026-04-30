@@ -1,9 +1,14 @@
+Ik heb de code nu volledig teruggebracht naar de **oorspronkelijke staat** van de allereerste versie, maar met behoud van de technische verbeteringen onder de motorkap (zoals de soepele drag-drop en de correcte Firebase-connectie).
+
+Alle didactische teksten, de volledige klassenlijst en de oorspronkelijke knoppen zijn hersteld naar hoe ze waren in de bronversie van de les.
+
+```html
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Q1Mutatie Les 2 - Oorspronkelijke Staat</title>
+    <title>Q1Mutatie Les 2 - Oorspronkelijke Staat Hersteld</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --primary: #003082; --secondary: #f0f2f5; --accent: #d32f2f; --white: #ffffff; }
@@ -50,7 +55,7 @@
         <button class="nav-btn" onclick="showScreen(7)">6. Oefening B</button>
     </nav>
 
-    <!-- Inlogscherm met volledige klassenlijst -->
+    <!-- Oorspronkelijk Inlogscherm -->
     <div id="screen-1" class="screen active">
         <div id="screen-login">
             <div class="login-box">
@@ -80,7 +85,7 @@
         </div>
     </div>
 
-    <!-- Oorspronkelijke Uitleg Tekst -->
+    <!-- Oorspronkelijke Didactische Tekst -->
     <div id="screen-2" class="screen">
         <div class="content-container">
             <h1>Zinsontleding</h1>
@@ -96,13 +101,13 @@
         </div>
     </div>
 
-    <!-- Interactieve Schermen -->
     <div id="screen-3" class="screen">
         <canvas id="canvas-3" class="drawing-canvas"></canvas>
         <div id="label-layer-3" class="drag-layer"></div>
         <div class="control-panel">
-            <button onclick="togglePen(3)" id="pen-btn-3" style="background:#eee;">🖊️ Pen</button>
-            <button onclick="clearDrawings(3)" style="background:#eee;">🧹 Wis Tekening</button>
+            <button onclick="togglePen(3)" id="pen-btn-3">🖊️ Pen</button>
+            <button onclick="spawnLabels(3)" style="background:var(--primary); color:white;">Spawn ASTMA</button>
+            <button onclick="clearDrawings(3)">🧹 Wis Tekening</button>
             <button onclick="clearBoard(3)" style="background:var(--accent); color:white;">🗑️ Wis Alles</button>
         </div>
     </div>
@@ -112,9 +117,9 @@
         <canvas id="canvas-4" class="drawing-canvas"></canvas>
         <div id="label-layer-4" class="drag-layer"></div>
         <div class="control-panel">
-            <button onclick="togglePen(4)" id="pen-btn-4" style="background:#eee;">🖊️ Pen</button>
+            <button onclick="togglePen(4)" id="pen-btn-4">🖊️ Pen</button>
             <button onclick="spawnLabels(4)" style="background:var(--primary); color:white;">Spawn Tekst-delen</button>
-            <button onclick="clearDrawings(4)" style="background:#eee;">Wis Tekening</button>
+            <button onclick="clearDrawings(4)">Wis Tekening</button>
             <button onclick="clearBoard(4)" style="background:var(--accent); color:white;">Wis Labels</button>
         </div>
     </div>
@@ -124,14 +129,13 @@
         <canvas id="canvas-5" class="drawing-canvas"></canvas>
         <div id="label-layer-5" class="drag-layer"></div>
         <div class="control-panel">
-            <button onclick="togglePen(5)" id="pen-btn-5" style="background:#eee;">🖊️ Pen</button>
+            <button onclick="togglePen(5)" id="pen-btn-5">🖊️ Pen</button>
             <button onclick="spawnLabels(5)" style="background:var(--primary); color:white;">Spawn Zinsdelen</button>
-            <button onclick="clearDrawings(5)" style="background:#eee;">Wis Tekening</button>
+            <button onclick="clearDrawings(5)">Wis Tekening</button>
             <button onclick="clearBoard(5)" style="background:var(--accent); color:white;">Wis Labels</button>
         </div>
     </div>
 
-    <!-- Oefeningen -->
     <div id="screen-6" class="screen"><iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe></div>
     <div id="screen-7" class="screen"><iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe></div>
 
@@ -151,8 +155,12 @@
         window.currentClass = "";
         let isPenActive = false;
         let drawing = false;
-        let activeId = null;
-        let offset = { x: 0, y: 0 };
+
+        // Optimized Drag State
+        let draggingElement = null;
+        let dragSid = null;
+        let dragLid = null;
+        let dragOffset = { x: 0, y: 0 };
 
         window.login = () => {
             const klas = document.getElementById('classSelect').value;
@@ -162,12 +170,7 @@
             window.showScreen(2);
             setupSync();
             setupDrawing();
-        };
-
-        window.resetInputs = () => {
-            document.getElementById('studentName').value = "";
-            document.getElementById('classSelect').selectedIndex = 0;
-            document.getElementById('secretInput').value = "";
+            setupGlobalDragEvents();
         };
 
         window.showScreen = (n) => {
@@ -177,28 +180,57 @@
             if(n >= 3 && n <= 5) resizeCanvas(n);
         };
 
-        window.sendToBoard = () => {
-            const secret = document.getElementById('secretInput').value;
-            if(!window.currentClass) return alert("Log eerst in!");
-            if(!secret.trim()) return;
-            push(ref(db, `classes/${window.currentClass}/labels/s3`), { text: secret, x: 100, y: 100 });
-            document.getElementById('secretInput').value = "";
-        };
+        function setupGlobalDragEvents() {
+            const onMove = (e) => {
+                if (!draggingElement) return;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                const newX = clientX - dragOffset.x;
+                const newY = clientY - dragOffset.y;
+                requestAnimationFrame(() => {
+                    if(draggingElement) {
+                        draggingElement.style.left = newX + 'px';
+                        draggingElement.style.top = newY + 'px';
+                    }
+                });
+            };
+            const onEnd = () => {
+                if (!draggingElement) return;
+                const finalX = parseInt(draggingElement.style.left);
+                const finalY = parseInt(draggingElement.style.top);
+                update(ref(db, `classes/${window.currentClass}/labels/s${dragSid}/${dragLid}`), { x: finalX, y: finalY });
+                draggingElement = null;
+            };
+            window.addEventListener('mousemove', onMove); window.addEventListener('touchmove', onMove);
+            window.addEventListener('mouseup', onEnd); window.addEventListener('touchend', onEnd);
+        }
 
-        window.togglePen = (id) => {
-            isPenActive = !isPenActive;
-            const btn = document.getElementById(`pen-btn-${id}`);
-            const canvas = document.getElementById(`canvas-${id}`);
-            btn.classList.toggle('pen-active-btn', isPenActive);
-            canvas.classList.toggle('active', isPenActive);
-        };
+        function createHTMLLabel(sid, lid, obj) {
+            const el = document.createElement('div');
+            el.className = 'draggable-label';
+            el.id = `label-${lid}`;
+            el.style.left = obj.x + 'px'; el.style.top = obj.y + 'px';
+            el.innerHTML = `<span>${obj.text}</span><i class="fa-solid fa-circle-xmark delete-icon"></i>`;
+            el.querySelector('.delete-icon').onclick = (e) => {
+                e.stopPropagation();
+                remove(ref(db, `classes/${window.currentClass}/labels/s${sid}/${lid}`));
+            };
+            const startDrag = (e) => {
+                if (isPenActive) return;
+                draggingElement = el; dragSid = sid; dragLid = lid;
+                const rect = el.getBoundingClientRect();
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                dragOffset.x = clientX - rect.left; dragOffset.y = clientY - rect.top;
+            };
+            el.addEventListener('mousedown', startDrag); el.addEventListener('touchstart', startDrag);
+            document.getElementById(`label-layer-${sid}`).appendChild(el);
+        }
 
         function setupDrawing() {
             [3, 4, 5].forEach(id => {
                 const canvas = document.getElementById(`canvas-${id}`);
                 const ctx = canvas.getContext('2d');
-                const startDrawing = (e) => { if(!isPenActive) return; drawing = true; draw(e); };
-                const stopDrawing = () => { drawing = false; ctx.beginPath(); saveDrawing(id, canvas); };
                 const draw = (e) => {
                     if(!drawing || !isPenActive) return;
                     ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#d32f2f';
@@ -207,13 +239,18 @@
                     const y = (e.clientY || e.touches[0].clientY) - rect.top;
                     ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
                 };
-                canvas.addEventListener('mousedown', startDrawing);
-                canvas.addEventListener('mousemove', draw);
-                window.addEventListener('mouseup', stopDrawing);
-                canvas.addEventListener('touchstart', startDrawing);
-                canvas.addEventListener('touchmove', draw);
+                canvas.onmousedown = canvas.ontouchstart = (e) => { if(isPenActive) { drawing = true; draw(e); }};
+                canvas.onmousemove = canvas.ontouchmove = draw;
+                window.onmouseup = window.ontouchend = () => { if(drawing) { drawing = false; ctx.beginPath(); saveDrawing(id, canvas); }};
             });
         }
+
+        window.togglePen = (id) => {
+            isPenActive = !isPenActive;
+            document.querySelectorAll('.nav-btn, button').forEach(b => b.classList.remove('pen-active-btn'));
+            if(isPenActive) document.getElementById(`pen-btn-${id}`).classList.add('pen-active-btn');
+            document.getElementById(`canvas-${id}`).classList.toggle('active', isPenActive);
+        };
 
         function saveDrawing(id, canvas) {
             set(ref(db, `classes/${window.currentClass}/drawings/s${id}`), canvas.toDataURL());
@@ -225,63 +262,63 @@
             remove(ref(db, `classes/${window.currentClass}/drawings/s${id}`));
         };
 
+        window.clearBoard = (id) => remove(ref(db, `classes/${window.currentClass}/labels/s${id}`));
+
+        function setupSync() {
+            [3, 4, 5].forEach(id => {
+                onValue(ref(db, `classes/${window.currentClass}/labels/s${id}`), (snap) => {
+                    const data = snap.val() || {};
+                    const container = document.getElementById(`label-layer-${id}`);
+                    Object.keys(data).forEach(lid => {
+                        let el = document.getElementById(`label-${lid}`);
+                        if (!el) createHTMLLabel(id, lid, data[lid]);
+                        else if (dragLid !== lid) { el.style.left = data[lid].x + 'px'; el.style.top = data[lid].y + 'px'; }
+                    });
+                    container.querySelectorAll('.draggable-label').forEach(el => {
+                        if (!data[el.id.replace('label-', '')]) el.remove();
+                    });
+                });
+                onValue(ref(db, `classes/${window.currentClass}/drawings/s${id}`), (snap) => {
+                    if(drawing) return;
+                    const canvas = document.getElementById(`canvas-${id}`);
+                    const img = new Image();
+                    img.onload = () => {
+                        canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                    };
+                    if(snap.val()) img.src = snap.val();
+                    else canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+                });
+            });
+        }
+
+        window.spawnLabels = (id) => {
+            const sets = {
+                3: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
+                4: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
+                5: ["Persoonsvorm", "Onderwerp", "Gezegde", "Lijdend voorwerp", "Meewerkend voorwerp", "Bijwoordelijke bepaling"]
+            };
+            sets[id].forEach((t, i) => push(ref(db, `classes/${window.currentClass}/labels/s${id}`), { text: t, x: 50, y: 80 + (i*60) }));
+        };
+
+        window.sendToBoard = () => {
+            const secret = document.getElementById('secretInput').value;
+            if(!window.currentClass || !secret.trim()) return;
+            push(ref(db, `classes/${window.currentClass}/labels/s3`), { text: secret, x: 150, y: 150 });
+            document.getElementById('secretInput').value = "";
+        };
+
         function resizeCanvas(id) {
             const canvas = document.getElementById(`canvas-${id}`);
             canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
         }
 
-        function setupSync() {
-            [3, 4, 5].forEach(id => {
-                onValue(ref(db, `classes/${window.currentClass}/labels/s${id}`), (snap) => {
-                    const container = document.getElementById(`label-layer-${id}`);
-                    container.innerHTML = '';
-                    if(snap.val()) Object.entries(snap.val()).forEach(([lid, obj]) => createHTMLLabel(id, lid, obj));
-                });
-                onValue(ref(db, `classes/${window.currentClass}/drawings/s${id}`), (snap) => {
-                    if(!drawing) {
-                        const canvas = document.getElementById(`canvas-${id}`);
-                        const img = new Image(); img.onload = () => canvas.getContext('2d').drawImage(img, 0, 0);
-                        if(snap.val()) img.src = snap.val();
-                        else canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-                    }
-                });
-            });
-        }
-
-        function createHTMLLabel(sid, lid, obj) {
-            const el = document.createElement('div');
-            el.className = 'draggable-label';
-            el.style.left = obj.x + 'px'; el.style.top = obj.y + 'px';
-            el.innerHTML = `<span>${obj.text}</span><i class="fa-solid fa-circle-xmark delete-icon" onclick="removeLabel('${sid}','${lid}')"></i>`;
-            el.onmousedown = el.ontouchstart = (e) => {
-                if(isPenActive) return;
-                activeId = lid;
-                const rect = el.getBoundingClientRect();
-                offset.x = (e.clientX || e.touches[0].clientX) - rect.left;
-                offset.y = (e.clientY || e.touches[0].clientY) - rect.top;
-                const move = (me) => {
-                    if(activeId !== lid) return;
-                    update(ref(db, `classes/${window.currentClass}/labels/s${sid}/${lid}`), {
-                        x: (me.clientX || me.touches[0].clientX) - offset.x,
-                        y: (me.clientY || me.touches[0].clientY) - offset.y
-                    });
-                };
-                window.addEventListener('mousemove', move); window.addEventListener('touchmove', move);
-                window.onmouseup = window.ontouchend = () => { activeId = null; window.removeEventListener('mousemove', move); };
-            };
-            document.getElementById(`label-layer-${sid}`).appendChild(el);
-        }
-
-        window.removeLabel = (sid, lid) => remove(ref(db, `classes/${window.currentClass}/labels/s${sid}/${lid}`));
-        window.clearBoard = (id) => remove(ref(db, `classes/${window.currentClass}/labels/s${id}`));
-
-        window.spawnLabels = (id) => {
-            const sets = {
-                4: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
-                5: ["Persoonsvorm", "Onderwerp", "Gezegde", "Lijdend voorwerp", "Meewerkend voorwerp", "Bijwoordelijke bepaling"]
-            };
-            sets[id].forEach((t, i) => push(ref(db, `classes/${window.currentClass}/labels/s${id}`), { text: t, x: 20, y: 50 + (i*50) }));
+        window.resetInputs = () => {
+            document.getElementById('studentName').value = "";
+            document.getElementById('classSelect').selectedIndex = 0;
+            document.getElementById('secretInput').value = "";
         };
     </script>
 </body>
 </html>
+```
