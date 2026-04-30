@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Q1Mutatie Les 2</title>
+    <title>Q1Mutatie Les 2 - Secret Input</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --primary: #003082; --secondary: #f0f2f5; --accent: #d32f2f; --white: #ffffff; }
@@ -29,14 +29,14 @@
 
         /* Interface */
         .content-container { padding: 30px; max-width: 900px; margin: 20px auto; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
-        .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
         .control-panel { background: var(--white); padding: 10px; display: flex; justify-content: center; gap: 10px; border-top: 1px solid #ddd; z-index: 1100; }
 
         /* Login */
         #screen-login { display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #003082 0%, #0056b3 100%); height: 100vh; }
-        .login-box { background: var(--white); padding: 40px; border-radius: 15px; text-align: center; width: 320px; }
-        input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-
+        .login-box { background: var(--white); padding: 30px; border-radius: 15px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        input[type="text"], select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit; }
+        textarea { height: 80px; resize: none; border: 2px solid #e0e0e0; }
+        
         iframe, embed { width: 100%; height: 100%; border: none; }
     </style>
 </head>
@@ -54,8 +54,10 @@
     <div id="screen-1" class="screen active">
         <div id="screen-login">
             <div class="login-box">
-                <h2>Q1Mutatie Les 2</h2>
-                <input type="text" id="studentName" placeholder="Je voornaam...">
+                <h2 style="color: var(--primary); margin-bottom: 5px;">Welkom bij de les</h2>
+                <p style="font-size: 0.85em; color: #666; margin-bottom: 20px;">Log in om te beginnen</p>
+                
+                <input type="text" id="studentName" placeholder="Je naam...">
                 <select id="classSelect">
                     <option value="" disabled selected>Kies je klas...</option>
                     <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option>
@@ -65,7 +67,13 @@
                     <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option>
                     <option value="Lima">Lima</option><option value="Mike">Mike</option>
                 </select>
-                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Start de les</button>
+                
+                <div style="margin-top: 15px; text-align: left;">
+                    <label style="font-size: 0.8em; font-weight: bold; color: var(--primary);">Wat heb je zojuist verteld tegen je klasgenoot?</label>
+                    <textarea id="secretInput" placeholder="Typ hier de zin die je net uitsprak..."></textarea>
+                </div>
+
+                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top: 10px;">Start de les</button>
             </div>
         </div>
     </div>
@@ -73,23 +81,26 @@
     <!-- Scherm 2: Uitleg -->
     <div id="screen-2" class="screen">
         <div class="content-container">
-            <h1>Zinsontleding Instructie</h1>
+            <h1>Zinsontleding</h1>
             <div class="grammar-rule">
                 <h3>Persoonsvorm (pv)</h3>
                 <p>Zet de zin in een andere tijd. Gebruik je de <strong>ovt</strong>? Dan krijgt de zin een <strong>filmisch</strong> karakter.</p>
             </div>
             <div class="grammar-rule"><h3>Gezegde (gez)</h3><p>Alle werkwoorden in de zin.</p></div>
             <div class="grammar-rule"><h3>Onderwerp (ow)</h3><p>Wie of wat + gezegde?</p></div>
-            <div class="grammar-rule"><h3>Lijdend voorwerp (lv)</h3><p>Wat of wie + gezegde + onderwerp?</p></div>
         </div>
     </div>
 
     <!-- Scherm 3: Digibord -->
     <div id="screen-3" class="screen">
-        <canvas id="whiteboard" width="1200" height="800" style="background:white;"></canvas>
+        <div id="label-layer-3" class="drag-layer"></div>
+        <div style="padding: 20px; color: #ccc; font-style: italic;">Digibord: Hier verschijnen de zinnen van de klas...</div>
+        <div class="control-panel">
+            <button onclick="clearBoard(3)" style="background:var(--accent); color:white; padding:10px; border-radius:5px;">Wis bord</button>
+        </div>
     </div>
 
-    <!-- Scherm 4: PDF Tekst-delen -->
+    <!-- Scherm 4 & 5 (PDFs) -->
     <div id="screen-4" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-4" class="drag-layer"></div>
@@ -98,7 +109,6 @@
         </div>
     </div>
 
-    <!-- Scherm 5: PDF Zinsdelen -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
@@ -131,8 +141,20 @@
 
         window.login = () => {
             const klas = document.getElementById('classSelect').value;
+            const secret = document.getElementById('secretInput').value;
             if(!klas) return alert("Kies een klas!");
+            
             window.currentClass = klas;
+            
+            // Als er een geheime zin is, stuur deze direct naar het Digibord (scherm 3)
+            if(secret.trim() !== "") {
+                push(ref(db, `classes/${window.currentClass}/labels/s3`), {
+                    text: secret,
+                    x: Math.random() * 200 + 50,
+                    y: Math.random() * 300 + 100
+                });
+            }
+
             document.getElementById('main-nav').style.display = 'flex';
             window.showScreen(2);
             setupSync();
@@ -145,7 +167,8 @@
         };
 
         function setupSync() {
-            [4, 5].forEach(screenId => {
+            // Luister naar schermen 3, 4 en 5
+            [3, 4, 5].forEach(screenId => {
                 onValue(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), (snap) => {
                     const container = document.getElementById(`label-layer-${screenId}`);
                     if(!container) return;
@@ -204,6 +227,12 @@
             sets[screenId].forEach((txt, i) => {
                 push(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), { text: txt, x: 50, y: 80 + (i * 60) });
             });
+        };
+
+        window.clearBoard = (screenId) => {
+            if(confirm("Bord leegmaken?")) {
+                remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}`));
+            }
         };
     </script>
 </body>
