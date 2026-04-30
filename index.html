@@ -27,10 +27,10 @@
         #main-nav {
             background: var(--primary);
             padding: 10px;
-            display: none; /* Verberg tot inlog */
+            display: none;
             justify-content: center;
             gap: 10px;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         .nav-btn {
@@ -46,7 +46,7 @@
 
         .nav-btn.active { background: white; color: var(--primary); }
 
-        /* Scherm Beheer */
+        /* Schermen */
         .screen {
             flex-grow: 1;
             display: none;
@@ -57,95 +57,63 @@
 
         .screen.active { display: flex; flex-direction: column; }
 
-        /* Scherm 1: Login */
-        #screen-login {
+        /* Dragables Container & Labels */
+        .drag-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .draggable-label {
+            position: absolute;
+            background: white;
+            border: 2px solid var(--primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: move;
+            font-weight: bold;
+            pointer-events: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .delete-icon {
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+
+        .delete-icon:hover { opacity: 0.7; }
+
+        .control-panel {
+            background: #fff;
+            padding: 10px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+            z-index: 1100;
+        }
+
+        /* Login */
+        #screen-login {
+            display: flex; justify-content: center; align-items: center;
             background: linear-gradient(135deg, #003082 0%, #0056b3 100%);
             height: 100vh;
         }
+        .login-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 350px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
 
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 350px;
-        }
+        /* Content */
+        .content-container { padding: 40px; max-width: 800px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
+        .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
 
-        select, input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        .btn-start {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            width: 100%;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        /* Scherm 2: Instructie */
-        .content-container {
-            padding: 40px;
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-
-        .grammar-rule {
-            margin-bottom: 20px;
-            padding-left: 20px;
-            border-left: 4px solid var(--primary);
-        }
-
-        /* Scherm 3: Digibord */
-        #board-container { 
-            position: relative; width: 96vw; height: 75%; 
-            background: #ffffff; margin: 10px auto; border: 2px solid #003082; 
-            border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            touch-action: none;
-        }
-        canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
-        .toolbar { 
-            background: #fff; padding: 15px; display: flex; gap: 10px; 
-            justify-content: center; border-top: 1px solid #ddd;
-        }
-
-        /* Schermen 4 & 5: Embeds */
-        iframe, embed {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        #status { 
-            position: absolute; top: 10px; right: 15px; padding: 5px 12px; 
-            border-radius: 20px; font-size: 11px; font-weight: bold;
-            background: #eee; z-index: 10;
-        }
-        #status.online { background: #ebffed; color: #2e7d32; }
-        #trash-zone { 
-            position: absolute; top: 10px; left: 15px; width: 55px; height: 55px; 
-            background: #fee2e2; border: 2px dashed #f87171; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; z-index: 10;
-        }
-        #trash-zone.active { transform: scale(1.2); background: #ef4444; }
+        iframe, embed { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
@@ -157,6 +125,7 @@
         <button class="nav-btn" onclick="showScreen(5)">4. PDF Bron</button>
     </nav>
 
+    <!-- Scherm 1: Login -->
     <div id="screen-1" class="screen active" style="height: 100vh;">
         <div id="screen-login">
             <div class="login-box">
@@ -168,230 +137,168 @@
                     <option value="Bravo">Bravo</option>
                     <option value="Charlie">Charlie</option>
                     <option value="Delta">Delta</option>
-                    <option value="Echo">Echo</option>
-                    <option value="Foxtrot">Foxtrot</option>
-                    <option value="Golf">Golf</option>
-                    <option value="Hotel">Hotel</option>
-                    <option value="Juliet">Juliet</option>
-                    <option value="Kilo">Kilo</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Mike">Mike</option>
                 </select>
-                <button class="btn-start" onclick="login()">Start de les</button>
+                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Start de les</button>
             </div>
         </div>
     </div>
 
+    <!-- Scherm 2: Uitleg -->
     <div id="screen-2" class="screen">
         <div class="content-container">
             <h1>Q1 Taalperfect Zinsdelen</h1>
-            <p><strong>Verdelen van zinsdelen:</strong></p>
-            
             <div class="grammar-rule">
-                <h3>1. Zoek eerst Persoonsvorm (pv)</h3>
-                <p>→ belangrijkste werkwoord</p>
-                <p>→ Zet de zin in een andere tijd OF maak er een vraagzin van (de pv komt vooraan).</p>
+                <h3>1. Persoonsvorm (pv)</h3>
+                <p>Zet de zin in een andere tijd. Gebruik je de <strong>ovt</strong>? Dan krijgt de zin een <strong>filmisch</strong> karakter.</p>
             </div>
-
             <div class="grammar-rule">
-                <h3>2. Dan: Gezegde (gez)</h3>
-                <p>→ Alle werkwoorden die in de zin voorkomen.</p>
+                <h3>2. Gezegde (gez)</h3>
+                <p>Alle werkwoorden in de zin.</p>
             </div>
-
             <div class="grammar-rule">
-                <h3>3. Dan: Onderwerp (ow)</h3>
-                <p>→ Belangrijkste speler(s) (mens, dier, plant of ding).</p>
-                <p>→ Voert de handeling uit. <strong>Vraag: Wie/wat + pv?</strong></p>
-            </div>
-
-            <div class="grammar-rule">
-                <h3>4. Dan: Lijdend Voorwerp (lv)</h3>
-                <p>→ Tweede speler (mens, dier, plant of ding).</p>
-                <p>→ Er gebeurt iets met deze speler. <strong>Vraag: Wie of wat + ow + gez?</strong></p>
+                <h3>3. Onderwerp (ow)</h3>
+                <p>Vraag: Wie/wat + pv?</p>
             </div>
         </div>
     </div>
 
+    <!-- Scherm 3: Digibord (Original) -->
     <div id="screen-3" class="screen">
-        <div id="board-container">
-            <canvas id="whiteboard" width="1200" height="800"></canvas>
-            <div id="status">Status: Laden...</div>
-            <div id="trash-zone">🗑️</div>
-        </div>
-        <div class="toolbar">
-            <input type="text" id="wordInput" placeholder="Woord invoeren...">
-            <button id="addBtn" style="background:#003082; color:white; border:none; padding:10px 20px; border-radius:8px;">Toevoegen</button>
-            <button id="clearBtn" style="background:#d32f2f; color:white; border:none; padding:10px 20px; border-radius:8px;">Wis Bord</button>
+        <canvas id="whiteboard" width="1200" height="800" style="background:white;"></canvas>
+        <div class="control-panel">
+            <input type="text" id="wordInput" style="width:200px;" placeholder="Woord...">
+            <button id="addBtn" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Toevoegen</button>
+            <button id="clearBtn" style="background:var(--accent); color:white; padding:10px; border-radius:5px;">Wis Bord</button>
         </div>
     </div>
 
+    <!-- Scherm 4: Oefening (LearningApps + Sync Labels) -->
     <div id="screen-4" class="screen">
         <iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe>
+        <div id="label-layer-4" class="drag-layer"></div>
+        <div class="control-panel">
+            <button onclick="spawnLabels(4)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Nieuwe set labels</button>
+        </div>
     </div>
 
+    <!-- Scherm 5: PDF (Sync Labels + Delete) -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
+        <div id="label-layer-5" class="drag-layer"></div>
+        <div class="control-panel">
+            <button onclick="spawnLabels(5)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Nieuwe zinsdelen</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, push, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.app";
 
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyA3_rzoZOWytlyAbYKKe_WuFlD8z2WvbX4",
             authDomain: "aangifteq2les1.firebaseapp.com",
             databaseURL: "https://aangifteq2les1-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "aangifteq2les1",
-            storageBucket: "aangifteq2les1.firebasestorage.app",
-            messagingSenderId: "1071661084879",
-            appId: "1:1071661084879:web:ec81dfed806ad75a8847ba"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // GLOBALE VARIABELEN
-        window.currentClass = "Alpha";
-        let objects = {};
-        let isDrawing = false, isDragging = false;
-        let draggedId = null, currentPathId = null;
-        let offsetX = 0, offsetY = 0;
+        let currentDrag = null;
 
-        const canvas = document.getElementById('whiteboard');
-        const ctx = canvas.getContext('2d');
-        const statusLabel = document.getElementById('status');
-        const trashZone = document.getElementById('trash-zone');
-
-        // NAVIGATIE LOGICA
-        window.showScreen = (n) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${n}`).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
-                btn.classList.toggle('active', (idx + 2) === n);
-            });
-        };
-
+        // AUTH & NAV
         window.login = () => {
-            const name = document.getElementById('studentName').value;
             const klas = document.getElementById('classSelect').value;
-            
-            if(!name || !klas) {
-                alert("Vul je naam in en kies een klas!");
-                return;
-            }
-            
+            if(!klas) return alert("Kies een klas!");
             window.currentClass = klas;
             document.getElementById('main-nav').style.display = 'flex';
             showScreen(2);
-            initBoard(); // Start de whiteboard sync voor de gekozen klas
+            setupSync();
         };
 
-        // WHITEBOARD FUNCTIES
-        function initBoard() {
-            onValue(ref(db, ".info/connected"), (snap) => {
-                if (snap.val()) { statusLabel.innerText = `● LIVE (${window.currentClass})`; statusLabel.classList.add('online'); }
-            });
+        window.showScreen = (n) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${n}`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach((btn, idx) => btn.classList.toggle('active', (idx + 2) === n));
+        };
 
-            const getPos = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return {
-                    x: (clientX - rect.left) * (canvas.width / rect.width),
-                    y: (clientY - rect.top) * (canvas.height / rect.height),
-                    rawX: clientX,
-                    rawY: clientY
-                };
-            };
-
-            const startAction = (e) => {
-                const { x, y } = getPos(e);
-                draggedId = null; isDragging = false;
-                const entries = Object.entries(objects).reverse();
-                for (const [id, obj] of entries) {
-                    if (obj.type === 'text') {
-                        ctx.font = "bold 24px Arial";
-                        const w = ctx.measureText(obj.text).width;
-                        if (x > obj.x - 10 && x < obj.x + w + 10 && y > obj.y - 35 && y < obj.y + 15) {
-                            draggedId = id; isDragging = true;
-                            offsetX = x - obj.x; offsetY = y - obj.y;
-                            return;
-                        }
-                    }
-                }
-                isDrawing = true;
-                const newPathRef = push(ref(db, `classes/${window.currentClass}/board`));
-                currentPathId = newPathRef.key;
-                set(newPathRef, { type: 'path', points: [{x, y}] });
-            };
-
-            const moveAction = (e) => {
-                if (!isDragging && !isDrawing) return;
-                const { x, y, rawX, rawY } = getPos(e);
-                if (isDragging && draggedId) {
-                    update(ref(db, `classes/${window.currentClass}/board/${draggedId}`), { x: x - offsetX, y: y - offsetY });
-                    const tRect = trashZone.getBoundingClientRect();
-                    trashZone.classList.toggle('active', rawX > tRect.left && rawX < tRect.right && rawY > tRect.top && rawY < tRect.bottom);
-                } else if (isDrawing && currentPathId) {
-                    const path = objects[currentPathId];
-                    if (path && path.points) {
-                        const lastP = path.points[path.points.length - 1];
-                        if (Math.hypot(x - lastP.x, y - lastP.y) > 5) {
-                            update(ref(db, `classes/${window.currentClass}/board/${currentPathId}`), { points: [...path.points, {x, y}] });
-                        }
-                    }
-                }
-            };
-
-            const stopAction = () => {
-                if (isDragging && draggedId && trashZone.classList.contains('active')) {
-                    remove(ref(db, `classes/${window.currentClass}/board/${draggedId}`));
-                }
-                isDrawing = isDragging = false;
-                draggedId = currentPathId = null;
-                trashZone.classList.remove('active');
-            };
-
-            canvas.addEventListener('mousedown', startAction);
-            window.addEventListener('mousemove', moveAction);
-            window.addEventListener('mouseup', stopAction);
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(e); }, { passive: false });
-            window.addEventListener('touchmove', (e) => { e.preventDefault(); moveAction(e); }, { passive: false });
-            window.addEventListener('touchend', stopAction);
-
-            onValue(ref(db, `classes/${window.currentClass}/board`), (snap) => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                objects = snap.val() || {};
-                snap.forEach((child) => {
-                    const obj = child.val();
-                    const isSel = child.key === draggedId;
-                    if (obj.type === 'text') {
-                        ctx.font = "bold 24px Arial";
-                        ctx.fillStyle = isSel ? "#003082" : "#333";
-                        ctx.fillText(obj.text, obj.x, obj.y);
-                        if (isSel) ctx.strokeRect(obj.x - 5, obj.y - 30, ctx.measureText(obj.text).width + 10, 40);
-                    } else if (obj.type === 'path' && obj.points) {
-                        ctx.strokeStyle = "#4b5563"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.beginPath();
-                        ctx.moveTo(obj.points[0].x, obj.points[0].y);
-                        obj.points.forEach(p => ctx.lineTo(p.x, p.y));
-                        ctx.stroke();
+        // DRAG & DROP LOGICA
+        function setupSync() {
+            // Luister naar labels voor scherm 4 en 5
+            [4, 5].forEach(screenId => {
+                onValue(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), (snap) => {
+                    const container = document.getElementById(`label-layer-${screenId}`);
+                    container.innerHTML = '';
+                    const data = snap.val();
+                    if(data) {
+                        Object.entries(data).forEach(([id, obj]) => {
+                            createHTMLLabel(screenId, id, obj);
+                        });
                     }
                 });
             });
         }
 
-        document.getElementById('addBtn').onclick = () => {
-            const val = document.getElementById('wordInput').value.trim();
-            if (val) {
-                push(ref(db, `classes/${window.currentClass}/board`), { type: 'text', text: val, x: 150, y: 150 });
-                document.getElementById('wordInput').value = '';
+        function createHTMLLabel(screenId, id, obj) {
+            const container = document.getElementById(`label-layer-${screenId}`);
+            const el = document.createElement('div');
+            el.className = 'draggable-label';
+            el.style.left = obj.x + 'px';
+            el.style.top = obj.y + 'px';
+            
+            el.innerHTML = `<span>${obj.text}</span>`;
+            
+            // Verwijderknop alleen voor scherm 5 (zinsdelen)
+            if(screenId === 5) {
+                const del = document.createElement('i');
+                del.className = 'fa-solid fa-circle-xmark delete-icon';
+                del.onclick = (e) => {
+                    e.stopPropagation();
+                    remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`));
+                };
+                el.appendChild(del);
             }
-        };
 
-        document.getElementById('clearBtn').onclick = () => {
-            if (confirm("Hele bord wissen?")) remove(ref(db, `classes/${window.currentClass}/board`));
+            // Drag Events
+            const handleMove = (e) => {
+                if(!currentDrag) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                update(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`), {
+                    x: clientX - 40,
+                    y: clientY - 80
+                });
+            };
+
+            const stopMove = () => {
+                currentDrag = null;
+                window.removeEventListener('mousemove', handleMove);
+                window.removeEventListener('touchmove', handleMove);
+            };
+
+            const startMove = (e) => {
+                currentDrag = id;
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('touchmove', handleMove);
+                window.addEventListener('mouseup', stopMove, {once:true});
+                window.addEventListener('touchend', stopMove, {once:true});
+            };
+
+            el.onmousedown = startMove;
+            el.ontouchstart = startMove;
+            container.appendChild(el);
+        }
+
+        window.spawnLabels = (screenId) => {
+            const sets = {
+                4: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
+                5: ["Persoonsvorm", "Onderwerp", "Gezegde", "Lijdend voorwerp", "Meewerkend voorwerp", "Bijwoordelijke bepaling"]
+            };
+            sets[screenId].forEach((txt, i) => {
+                push(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), {
+                    text: txt, x: 100, y: 100 + (i * 50)
+                });
+            });
         };
     </script>
 </body>
