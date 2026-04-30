@@ -107,7 +107,7 @@
             height: 100vh;
         }
         .login-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 350px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
         /* Content */
         .content-container { padding: 40px; max-width: 800px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
@@ -137,8 +137,16 @@
                     <option value="Bravo">Bravo</option>
                     <option value="Charlie">Charlie</option>
                     <option value="Delta">Delta</option>
+                    <option value="Echo">Echo</option>
+                    <option value="Foxtrot">Foxtrot</option>
+                    <option value="Golf">Golf</option>
+                    <option value="Hotel">Hotel</option>
+                    <option value="Juliet">Juliet</option>
+                    <option value="Kilo">Kilo</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Mike">Mike</option>
                 </select>
-                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Start de les</button>
+                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Start de les</button>
             </div>
         </div>
     </div>
@@ -162,7 +170,7 @@
         </div>
     </div>
 
-    <!-- Scherm 3: Digibord (Original) -->
+    <!-- Scherm 3: Digibord -->
     <div id="screen-3" class="screen">
         <canvas id="whiteboard" width="1200" height="800" style="background:white;"></canvas>
         <div class="control-panel">
@@ -172,7 +180,7 @@
         </div>
     </div>
 
-    <!-- Scherm 4: Oefening (LearningApps + Sync Labels) -->
+    <!-- Scherm 4: Oefening -->
     <div id="screen-4" class="screen">
         <iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe>
         <div id="label-layer-4" class="drag-layer"></div>
@@ -181,7 +189,7 @@
         </div>
     </div>
 
-    <!-- Scherm 5: PDF (Sync Labels + Delete) -->
+    <!-- Scherm 5: PDF -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
@@ -192,7 +200,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, push, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.app";
+        import { getDatabase, ref, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA3_rzoZOWytlyAbYKKe_WuFlD8z2WvbX4",
@@ -205,26 +213,35 @@
         const db = getDatabase(app);
 
         let currentDrag = null;
+        window.currentClass = "";
 
-        // AUTH & NAV
+        // LOGIN FUNCTIE
         window.login = () => {
+            const name = document.getElementById('studentName').value;
             const klas = document.getElementById('classSelect').value;
-            if(!klas) return alert("Kies een klas!");
+            
+            if(!name || !klas) {
+                alert("Vul je naam in en kies een klas!");
+                return;
+            }
+            
             window.currentClass = klas;
             document.getElementById('main-nav').style.display = 'flex';
-            showScreen(2);
+            window.showScreen(2);
             setupSync();
         };
 
+        // NAVIGATIE
         window.showScreen = (n) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${n}`).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach((btn, idx) => btn.classList.toggle('active', (idx + 2) === n));
+            document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', (idx + 2) === n);
+            });
         };
 
-        // DRAG & DROP LOGICA
+        // SYNC SETUP
         function setupSync() {
-            // Luister naar labels voor scherm 4 en 5
             [4, 5].forEach(screenId => {
                 onValue(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), (snap) => {
                     const container = document.getElementById(`label-layer-${screenId}`);
@@ -245,10 +262,8 @@
             el.className = 'draggable-label';
             el.style.left = obj.x + 'px';
             el.style.top = obj.y + 'px';
-            
             el.innerHTML = `<span>${obj.text}</span>`;
             
-            // Verwijderknop alleen voor scherm 5 (zinsdelen)
             if(screenId === 5) {
                 const del = document.createElement('i');
                 del.className = 'fa-solid fa-circle-xmark delete-icon';
@@ -259,9 +274,8 @@
                 el.appendChild(del);
             }
 
-            // Drag Events
             const handleMove = (e) => {
-                if(!currentDrag) return;
+                if(currentDrag !== id) return;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 update(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`), {
@@ -290,6 +304,7 @@
         }
 
         window.spawnLabels = (screenId) => {
+            if(!window.currentClass) return;
             const sets = {
                 4: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
                 5: ["Persoonsvorm", "Onderwerp", "Gezegde", "Lijdend voorwerp", "Meewerkend voorwerp", "Bijwoordelijke bepaling"]
