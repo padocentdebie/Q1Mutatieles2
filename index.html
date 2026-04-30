@@ -3,149 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Q1Mutatie Les 2 - Zinsdelen</title>
+    <title>Q1Mutatie Les 2</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root {
-            --primary: #003082;
-            --secondary: #f0f2f5;
-            --accent: #d32f2f;
-            --text: #333;
-            --white: #ffffff;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--secondary); 
-            margin: 0; 
-            overflow: hidden; 
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Navigatie */
-        #main-nav {
-            background: var(--primary);
-            padding: 10px;
-            display: none;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            z-index: 2000;
-        }
-
-        .nav-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            font-size: 0.9em;
-        }
-
+        :root { --primary: #003082; --secondary: #f0f2f5; --accent: #d32f2f; --white: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--secondary); margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        #main-nav { background: var(--primary); padding: 10px; display: none; justify-content: center; flex-wrap: wrap; gap: 8px; z-index: 2000; }
+        .nav-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em; }
         .nav-btn.active { background: var(--white); color: var(--primary); }
 
-        /* Schermen */
-        .screen {
-            flex-grow: 1;
-            display: none;
-            width: 100%;
-            height: calc(100vh - 60px);
-            position: relative;
-            overflow-y: auto;
-        }
-
+        .screen { flex-grow: 1; display: none; width: 100%; height: calc(100vh - 60px); position: relative; overflow: hidden; }
         .screen.active { display: flex; flex-direction: column; }
 
-        /* Dragables Layer */
-        .drag-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 1000;
+        /* Drag & Drop */
+        .drag-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        .draggable-label { 
+            position: absolute; background: var(--white); border: 2px solid var(--primary); 
+            padding: 8px 12px; border-radius: 6px; cursor: grab; font-weight: bold; 
+            pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); user-select: none; 
+            display: flex; align-items: center; gap: 8px; white-space: nowrap; touch-action: none;
         }
+        .draggable-label:active { cursor: grabbing; z-index: 1100; }
+        .delete-icon { color: var(--accent); cursor: pointer; font-size: 1.1em; }
 
-        .draggable-label {
-            position: absolute;
-            background: var(--white);
-            border: 2px solid var(--primary);
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: grab;
-            font-weight: bold;
-            pointer-events: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            white-space: nowrap;
-            touch-action: none;
-        }
-
-        .delete-icon { color: var(--accent); cursor: pointer; }
-
-        /* Content & Oefeningen */
-        .content-container { 
-            padding: 30px; 
-            max-width: 900px; 
-            margin: 20px auto; 
-            background: var(--white); 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        }
-
+        /* Interface */
+        .content-container { padding: 30px; max-width: 900px; margin: 20px auto; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
         .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
-
-        /* Invuloefening Stijl */
-        .exercise-block {
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-
-        .exercise-block h4 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        
-        .input-row {
-            display: grid;
-            grid-template-columns: 160px 1fr;
-            align-items: center;
-            margin: 8px 0;
-            gap: 10px;
-        }
-
-        .input-row label { font-weight: 500; font-size: 0.9em; }
-        .exercise-input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .control-panel {
-            background: var(--white);
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            border-top: 1px solid #ddd;
-            z-index: 1100;
-        }
+        .control-panel { background: var(--white); padding: 10px; display: flex; justify-content: center; gap: 10px; border-top: 1px solid #ddd; z-index: 1100; }
 
         /* Login */
-        #screen-login {
-            display: flex; justify-content: center; align-items: center;
-            background: linear-gradient(135deg, #003082 0%, #0056b3 100%);
-            height: 100vh;
-        }
-        .login-box { background: var(--white); padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 350px; }
+        #screen-login { display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #003082 0%, #0056b3 100%); height: 100vh; }
+        .login-box { background: var(--white); padding: 40px; border-radius: 15px; text-align: center; width: 320px; }
         input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
 
         iframe, embed { width: 100%; height: 100%; border: none; }
@@ -156,13 +45,13 @@
     <nav id="main-nav">
         <button class="nav-btn active" onclick="showScreen(2)">1. Uitleg</button>
         <button class="nav-btn" onclick="showScreen(3)">2. Digibord</button>
-        <button class="nav-btn" onclick="showScreen(4)">3. Tekst-delen</button>
+        <button class="nav-btn" onclick="showScreen(4)">3. PDF Tekst-delen</button>
         <button class="nav-btn" onclick="showScreen(5)">4. PDF Zinsdelen</button>
-        <button class="nav-btn" onclick="showScreen(6)">5. Invuloefening</button>
+        <button class="nav-btn" onclick="showScreen(6)">5. Oefening</button>
     </nav>
 
-    <!-- Scherm 1: Login -->
-    <div id="screen-1" class="screen active" style="height: 100vh;">
+    <!-- Login -->
+    <div id="screen-1" class="screen active">
         <div id="screen-login">
             <div class="login-box">
                 <h2>Q1Mutatie Les 2</h2>
@@ -176,7 +65,7 @@
                     <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option>
                     <option value="Lima">Lima</option><option value="Mike">Mike</option>
                 </select>
-                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Start de les</button>
+                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer;">Start de les</button>
             </div>
         </div>
     </div>
@@ -184,132 +73,43 @@
     <!-- Scherm 2: Uitleg -->
     <div id="screen-2" class="screen">
         <div class="content-container">
-            <h1>Q1 Taalperfect Zinsdelen</h1>
+            <h1>Zinsontleding Instructie</h1>
             <div class="grammar-rule">
-                <h3>1. Persoonsvorm (pv)</h3>
+                <h3>Persoonsvorm (pv)</h3>
                 <p>Zet de zin in een andere tijd. Gebruik je de <strong>ovt</strong>? Dan krijgt de zin een <strong>filmisch</strong> karakter.</p>
             </div>
-            <div class="grammar-rule">
-                <h3>2. Gezegde (gez)</h3>
-                <p>Alle werkwoorden in de zin.</p>
-            </div>
-            <div class="grammar-rule">
-                <h3>3. Onderwerp (ow)</h3>
-                <p>Vraag: Wie of wat + gezegde?</p>
-            </div>
-            <div class="grammar-rule">
-                <h3>4. Lijdend voorwerp (lv)</h3>
-                <p>Vraag: Wat of wie + gezegde + onderwerp?</p>
-            </div>
+            <div class="grammar-rule"><h3>Gezegde (gez)</h3><p>Alle werkwoorden in de zin.</p></div>
+            <div class="grammar-rule"><h3>Onderwerp (ow)</h3><p>Wie of wat + gezegde?</p></div>
+            <div class="grammar-rule"><h3>Lijdend voorwerp (lv)</h3><p>Wat of wie + gezegde + onderwerp?</p></div>
         </div>
     </div>
 
     <!-- Scherm 3: Digibord -->
     <div id="screen-3" class="screen">
-        <canvas id="whiteboard" width="1600" height="1000" style="background:white;"></canvas>
-        <div class="control-panel">
-            <input type="text" id="wordInput" style="width:200px;" placeholder="Woord...">
-            <button id="addBtn" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Toevoegen</button>
-            <button id="clearBtn" style="background:var(--accent); color:white; padding:10px; border-radius:5px;">Wis Bord</button>
-        </div>
+        <canvas id="whiteboard" width="1200" height="800" style="background:white;"></canvas>
     </div>
 
-    <!-- Scherm 4: Oefening Tekstdelen -->
+    <!-- Scherm 4: PDF Tekst-delen -->
     <div id="screen-4" class="screen">
-        <iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe>
+        <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-4" class="drag-layer"></div>
         <div class="control-panel">
-            <button onclick="spawnLabels(4)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Nieuwe set labels</button>
+            <button onclick="spawnLabels(4)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Spawn Tekst-delen</button>
         </div>
     </div>
 
-    <!-- Scherm 5: PDF Bron Zinsdelen -->
+    <!-- Scherm 5: PDF Zinsdelen -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
         <div class="control-panel">
-            <button onclick="spawnLabels(5)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Nieuwe zinsdelen</button>
+            <button onclick="spawnLabels(5)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Spawn Zinsdelen</button>
         </div>
     </div>
 
-    <!-- Scherm 6: Invuloefening -->
+    <!-- Scherm 6: Oefening -->
     <div id="screen-6" class="screen">
-        <div class="content-container">
-            <h2>Zinsdelen invullen</h2>
-            <p>Vul per zin de juiste zinsdelen in.</p>
-
-            <!-- Zin 1 -->
-            <div class="exercise-block">
-                <h4>1. De trainer geeft uitleg aan de spelersgroep van Ajax.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-1-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-2-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-3-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-4-"></div>
-            </div>
-
-            <!-- Zin 2 -->
-            <div class="exercise-block">
-                <h4>2. Die verpleegster verzorgt de patiënt, het kind en de dokter.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-5-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-6-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-7-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-8-"></div>
-            </div>
-
-            <!-- Zin 3 -->
-            <div class="exercise-block">
-                <h4>3. Zijn vriendin koopt een kaartje voor de film.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-9-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-10-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-11-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-12-"></div>
-            </div>
-
-            <!-- Zin 4 -->
-            <div class="exercise-block">
-                <h4>4. Graag drink ik in het weekeinde een glaasje wijn of een lekkere likeur.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-13-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-14-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-15-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-16-"></div>
-            </div>
-
-            <!-- Zin 5 -->
-            <div class="exercise-block">
-                <h4>5. Kun je die brief nu wel goed lezen?</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-17-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-18-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-19-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-20-"></div>
-            </div>
-
-            <!-- Zin 6 -->
-            <div class="exercise-block">
-                <h4>6. Zij zette zojuist de tv aan.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-21-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-22-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-23-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-24-"></div>
-            </div>
-
-            <!-- Zin 7 -->
-            <div class="exercise-block">
-                <h4>7. Mijn dochter krijgt vanmiddag haar diploma.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-25-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-26-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-27-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-28-"></div>
-            </div>
-
-            <!-- Zin 8 -->
-            <div class="exercise-block">
-                <h4>8. Hij kan het huis nu echt niet vinden op de kaart.</h4>
-                <div class="input-row"><label>persoonsvorm:</label><input type="text" class="exercise-input" placeholder="-29-"></div>
-                <div class="input-row"><label>onderwerp:</label><input type="text" class="exercise-input" placeholder="-30-"></div>
-                <div class="input-row"><label>gezegde:</label><input type="text" class="exercise-input" placeholder="-31-"></div>
-                <div class="input-row"><label>lijdend voorwerp:</label><input type="text" class="exercise-input" placeholder="-32-"></div>
-            </div>
-        </div>
+        <iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe>
     </div>
 
     <script type="module">
@@ -325,15 +125,13 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
         let activeId = null;
         let offset = { x: 0, y: 0 };
         window.currentClass = "";
 
         window.login = () => {
-            const name = document.getElementById('studentName').value;
             const klas = document.getElementById('classSelect').value;
-            if(!name || !klas) return alert("Vul je naam in en kies een klas!");
+            if(!klas) return alert("Kies een klas!");
             window.currentClass = klas;
             document.getElementById('main-nav').style.display = 'flex';
             window.showScreen(2);
@@ -342,11 +140,8 @@
 
         window.showScreen = (n) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const targetScreen = document.getElementById(`screen-${n}`);
-            if(targetScreen) targetScreen.classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
-                btn.classList.toggle('active', (idx + 2) === n);
-            });
+            document.getElementById(`screen-${n}`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach((btn, i) => btn.classList.toggle('active', (i+2) === n));
         };
 
         function setupSync() {
@@ -356,9 +151,7 @@
                     if(!container) return;
                     container.innerHTML = '';
                     const data = snap.val();
-                    if(data) {
-                        Object.entries(data).forEach(([id, obj]) => createHTMLLabel(screenId, id, obj));
-                    }
+                    if(data) Object.entries(data).forEach(([id, obj]) => createHTMLLabel(screenId, id, obj));
                 });
             });
         }
@@ -373,13 +166,10 @@
             
             const del = document.createElement('i');
             del.className = 'fa-solid fa-circle-xmark delete-icon';
-            del.onclick = (e) => {
-                e.stopPropagation();
-                remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`));
-            };
+            del.onclick = (e) => { e.stopPropagation(); remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`)); };
             el.appendChild(del);
 
-            const handleMove = (e) => {
+            const move = (e) => {
                 if (activeId !== id) return;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -389,40 +179,30 @@
                 });
             };
 
-            const stopMove = () => {
-                activeId = null;
-                window.removeEventListener('mousemove', handleMove);
-                window.removeEventListener('touchmove', handleMove);
-            };
+            const stop = () => { activeId = null; window.removeEventListener('mousemove', move); window.removeEventListener('touchmove', move); };
 
-            const startMove = (e) => {
+            el.onmousedown = el.ontouchstart = (e) => {
                 activeId = id;
                 const rect = el.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 offset.x = clientX - rect.left;
                 offset.y = clientY - rect.top;
-                window.addEventListener('mousemove', handleMove);
-                window.addEventListener('touchmove', handleMove);
-                window.addEventListener('mouseup', stopMove, {once:true});
-                window.addEventListener('touchend', stopMove, {once:true});
+                window.addEventListener('mousemove', move);
+                window.addEventListener('touchmove', move);
+                window.addEventListener('mouseup', stop, {once:true});
+                window.addEventListener('touchend', stop, {once:true});
             };
-
-            el.onmousedown = startMove;
-            el.ontouchstart = startMove;
             container.appendChild(el);
         }
 
         window.spawnLabels = (screenId) => {
-            if(!window.currentClass) return;
             const sets = {
                 4: ["Aanleiding", "Situatie", "Toedracht", "Maatregelen", "Afhandeling"],
                 5: ["Persoonsvorm", "Onderwerp", "Gezegde", "Lijdend voorwerp", "Meewerkend voorwerp", "Bijwoordelijke bepaling"]
             };
             sets[screenId].forEach((txt, i) => {
-                push(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), {
-                    text: txt, x: 50, y: 80 + (i * 65)
-                });
+                push(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), { text: txt, x: 50, y: 80 + (i * 60) });
             });
         };
     </script>
