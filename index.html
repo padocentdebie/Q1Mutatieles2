@@ -16,7 +16,6 @@
         .screen { flex-grow: 1; display: none; width: 100%; height: calc(100vh - 60px); position: relative; overflow: hidden; }
         .screen.active { display: flex; flex-direction: column; }
 
-        /* Drag & Drop */
         .drag-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
         .draggable-label { 
             position: absolute; background: var(--white); border: 2px solid var(--primary); 
@@ -27,11 +26,9 @@
         .draggable-label:active { cursor: grabbing; z-index: 1100; }
         .delete-icon { color: var(--accent); cursor: pointer; font-size: 1.1em; }
 
-        /* Interface */
         .content-container { padding: 30px; max-width: 900px; margin: 20px auto; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
         .control-panel { background: var(--white); padding: 10px; display: flex; justify-content: center; gap: 10px; border-top: 1px solid #ddd; z-index: 1100; }
 
-        /* Login */
         #screen-login { display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #003082 0%, #0056b3 100%); height: 100vh; }
         .login-box { background: var(--white); padding: 30px; border-radius: 15px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         input[type="text"], select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit; }
@@ -47,7 +44,8 @@
         <button class="nav-btn" onclick="showScreen(3)">2. Digibord</button>
         <button class="nav-btn" onclick="showScreen(4)">3. PDF Tekst-delen</button>
         <button class="nav-btn" onclick="showScreen(5)">4. PDF Zinsdelen</button>
-        <button class="nav-btn" onclick="showScreen(6)">5. Oefening</button>
+        <button class="nav-btn" onclick="showScreen(6)">5. Oefening A</button>
+        <button class="nav-btn" onclick="showScreen(7)">6. Oefening B</button>
     </nav>
 
     <!-- Login -->
@@ -56,7 +54,6 @@
             <div class="login-box">
                 <h2 style="color: var(--primary); margin-bottom: 5px;">Welkom bij de les</h2>
                 <p style="font-size: 0.85em; color: #666; margin-bottom: 20px;">Log in om te beginnen</p>
-                
                 <input type="text" id="studentName" placeholder="Je naam...">
                 <select id="classSelect">
                     <option value="" disabled selected>Kies je klas...</option>
@@ -67,13 +64,11 @@
                     <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option>
                     <option value="Lima">Lima</option><option value="Mike">Mike</option>
                 </select>
-                
                 <div style="margin-top: 15px; text-align: left;">
                     <label style="font-size: 0.8em; font-weight: bold; color: var(--primary);">Pas op wat je zegt!</label>
                     <textarea id="secretInput" placeholder="..."></textarea>
                     <button onclick="sendToBoard()" style="background:#555; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top: 5px;">Zet op bord</button>
                 </div>
-
                 <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top: 10px;">Start de les</button>
                 <button onclick="resetInputs()" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; margin-top:15px; font-size:0.8em;">Reset invoer</button>
             </div>
@@ -84,22 +79,15 @@
     <div id="screen-2" class="screen">
         <div class="content-container">
             <h1>Zinsontleding</h1>
-            <div class="grammar-rule">
-                <h3>* Persoonsvorm (pv)</h3>
-                <p>→ belangrijkste werkwoord → vraagzin<br>→ tijd veranderen</p>
-            </div>
-            <div class="grammar-rule">
-                <h3>* Gezegde (gez)</h3>
-                <p>→ alle werkwoorden die in de zin voorkomen.</p>
-            </div>
-            <div class="grammar-rule">
-                <h3>* Onderwerp (ow)</h3>
-                <p>→ belangrijkste speler, of spelers (mens,dier, plant of ding) in de zin → voert de persoonsvorm uit → wie+ pv?</p>
-            </div>
-            <div class="grammar-rule">
-                <h3>* Lijdend Voorwerp (lv)</h3>
-                <p>→ tweede speler, of (mens, dier, plant of ding) in de zin → met deze speler gebeurt iets in de zin → Wie of wat + ow + gez?</p>
-            </div>
+            <p>Zoek eerst <br>
+            * Persoonsvorm (pv)  → belangrijkste werkwoord → vraagzin <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → tijd veranderen <br>
+            dan <br>
+            * Gezegde (gez) → alle werkwoorden die in de zin voorkomen. <br><br>
+            dan <br>
+            * Onderwerp (ow) → belangrijkste speler, of spelers (mens,dier, plant of ding) in de zin → voert de persoonsvorm uit → wie+ pv? <br><br>
+            dan <br>
+            * Lijdend Voorwerp (lv) → tweede speler, of (mens, dier, plant of ding) in de zin → met deze speler gebeurt iets in de zin → Wie of wat + ow + gez?</p>
         </div>
     </div>
 
@@ -112,26 +100,34 @@
         </div>
     </div>
 
-    <!-- Scherm 4 & 5 -->
+    <!-- Scherm 4: ASTMA -->
     <div id="screen-4" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-4" class="drag-layer"></div>
         <div class="control-panel">
             <button onclick="spawnLabels(4)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Spawn Tekst-delen</button>
+            <button onclick="clearBoard(4)" style="background:var(--accent); color:white; padding:10px; border-radius:5px;">Wis bord</button>
         </div>
     </div>
 
+    <!-- Scherm 5: Zinsdelen -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
         <div class="control-panel">
             <button onclick="spawnLabels(5)" style="background:var(--primary); color:white; padding:10px; border-radius:5px;">Spawn Zinsdelen</button>
+            <button onclick="clearBoard(5)" style="background:var(--accent); color:white; padding:10px; border-radius:5px;">Wis bord</button>
         </div>
     </div>
 
-    <!-- Scherm 6 -->
+    <!-- Scherm 6: Oefening A -->
     <div id="screen-6" class="screen">
         <iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe>
+    </div>
+
+    <!-- Scherm 7: Oefening B -->
+    <div id="screen-7" class="screen">
+        <iframe src="https://learningapps.org/watch?v=p8k3520qj23"></iframe>
     </div>
 
     <script type="module">
@@ -154,14 +150,11 @@
         window.sendToBoard = () => {
             const klas = document.getElementById('classSelect').value;
             const secret = document.getElementById('secretInput').value;
-            if(!klas) return alert("Kies een klas!");
+            if(!klas) return alert("Kies eerst een klas!");
             if(secret.trim() === "") return;
-            
             window.currentClass = klas;
             push(ref(db, `classes/${window.currentClass}/labels/s3`), {
-                text: secret,
-                x: Math.random() * 200 + 50,
-                y: Math.random() * 300 + 100
+                text: secret, x: 100, y: 100
             });
             document.getElementById('secretInput').value = "";
         };
@@ -222,7 +215,11 @@
                 });
             };
 
-            const stop = () => { activeId = null; window.removeEventListener('mousemove', move); window.removeEventListener('touchmove', move); };
+            const stop = () => { 
+                activeId = null; 
+                window.removeEventListener('mousemove', move); 
+                window.removeEventListener('touchmove', move); 
+            };
 
             el.onmousedown = el.ontouchstart = (e) => {
                 activeId = id;
