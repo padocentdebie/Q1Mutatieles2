@@ -57,7 +57,7 @@
 
         .screen.active { display: flex; flex-direction: column; }
 
-        /* Dragables Container & Labels */
+        /* Dragables Layer */
         .drag-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -69,26 +69,34 @@
             position: absolute;
             background: white;
             border: 2px solid var(--primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: move;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: grab;
             font-weight: bold;
             pointer-events: auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             user-select: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             white-space: nowrap;
+            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: none; /* Voorkomt scrollen tijdens dragen */
+        }
+
+        .draggable-label:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            z-index: 1001;
         }
 
         .delete-icon {
             color: var(--accent);
             cursor: pointer;
             font-size: 1.1em;
+            margin-left: 5px;
         }
-
-        .delete-icon:hover { opacity: 0.7; }
 
         .control-panel {
             background: #fff;
@@ -110,7 +118,7 @@
         input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
         /* Content */
-        .content-container { padding: 40px; max-width: 800px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
+        .content-container { padding: 40px; max-width: 800px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
         .grammar-rule { margin-bottom: 20px; padding-left: 20px; border-left: 4px solid var(--primary); }
 
         iframe, embed { width: 100%; height: 100%; border: none; }
@@ -165,7 +173,11 @@
             </div>
             <div class="grammar-rule">
                 <h3>3. Onderwerp (ow)</h3>
-                <p>Vraag: Wie/wat + pv?</p>
+                <p>Vraag: Wie of wat + gezegde?</p>
+            </div>
+            <div class="grammar-rule">
+                <h3>4. Lijdend voorwerp (lv)</h3>
+                <p>Vraag: Wat of wie + gezegde + onderwerp?</p>
             </div>
         </div>
     </div>
@@ -189,7 +201,7 @@
         </div>
     </div>
 
-    <!-- Scherm 5: PDF -->
+    <!-- Scherm 5: PDF Bron -->
     <div id="screen-5" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-5" class="drag-layer"></div>
@@ -212,19 +224,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let currentDrag = null;
+        let activeId = null;
+        let offset = { x: 0, y: 0 };
         window.currentClass = "";
 
-        // LOGIN FUNCTIE
+        // LOGIN
         window.login = () => {
             const name = document.getElementById('studentName').value;
             const klas = document.getElementById('classSelect').value;
-            
-            if(!name || !klas) {
-                alert("Vul je naam in en kies een klas!");
-                return;
-            }
-            
+            if(!name || !klas) return alert("Vul je naam in en kies een klas!");
             window.currentClass = klas;
             document.getElementById('main-nav').style.display = 'flex';
             window.showScreen(2);
@@ -234,23 +242,23 @@
         // NAVIGATIE
         window.showScreen = (n) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${n}`).classList.add('active');
+            const targetScreen = document.getElementById(`screen-${n}`);
+            if(targetScreen) targetScreen.classList.add('active');
             document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', (idx + 2) === n);
             });
         };
 
-        // SYNC SETUP
+        // SYNC
         function setupSync() {
             [4, 5].forEach(screenId => {
                 onValue(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), (snap) => {
                     const container = document.getElementById(`label-layer-${screenId}`);
+                    if(!container) return;
                     container.innerHTML = '';
                     const data = snap.val();
                     if(data) {
-                        Object.entries(data).forEach(([id, obj]) => {
-                            createHTMLLabel(screenId, id, obj);
-                        });
+                        Object.entries(data).forEach(([id, obj]) => createHTMLLabel(screenId, id, obj));
                     }
                 });
             });
@@ -264,34 +272,41 @@
             el.style.top = obj.y + 'px';
             el.innerHTML = `<span>${obj.text}</span>`;
             
-            if(screenId === 5) {
-                const del = document.createElement('i');
-                del.className = 'fa-solid fa-circle-xmark delete-icon';
-                del.onclick = (e) => {
-                    e.stopPropagation();
-                    remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`));
-                };
-                el.appendChild(del);
-            }
+            const del = document.createElement('i');
+            del.className = 'fa-solid fa-circle-xmark delete-icon';
+            del.onclick = (e) => {
+                e.stopPropagation();
+                remove(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`));
+            };
+            el.appendChild(del);
 
             const handleMove = (e) => {
-                if(currentDrag !== id) return;
+                if (activeId !== id) return;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
                 update(ref(db, `classes/${window.currentClass}/labels/s${screenId}/${id}`), {
-                    x: clientX - 40,
-                    y: clientY - 80
+                    x: clientX - offset.x,
+                    y: clientY - offset.y
                 });
             };
 
             const stopMove = () => {
-                currentDrag = null;
+                activeId = null;
                 window.removeEventListener('mousemove', handleMove);
                 window.removeEventListener('touchmove', handleMove);
             };
 
             const startMove = (e) => {
-                currentDrag = id;
+                activeId = id;
+                const rect = el.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                // Bereken waar in het label je klikt, zodat hij niet verspringt
+                offset.x = clientX - rect.left;
+                offset.y = clientY - rect.top;
+
                 window.addEventListener('mousemove', handleMove);
                 window.addEventListener('touchmove', handleMove);
                 window.addEventListener('mouseup', stopMove, {once:true});
@@ -311,7 +326,7 @@
             };
             sets[screenId].forEach((txt, i) => {
                 push(ref(db, `classes/${window.currentClass}/labels/s${screenId}`), {
-                    text: txt, x: 100, y: 100 + (i * 50)
+                    text: txt, x: 50, y: 80 + (i * 65)
                 });
             });
         };
