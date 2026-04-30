@@ -37,10 +37,6 @@
         input[type="text"], select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit; }
         textarea { height: 80px; resize: none; border: 2px solid #e0e0e0; }
         
-        .action-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; transition: opacity 0.2s; }
-        .action-btn:hover { opacity: 0.9; }
-        .reset-link { display: inline-block; margin-top: 15px; color: #888; font-size: 0.8em; text-decoration: underline; cursor: pointer; border: none; background: none; }
-
         iframe, embed { width: 100%; height: 100%; border: none; }
     </style>
 </head>
@@ -72,56 +68,41 @@
                     <option value="Lima">Lima</option><option value="Mike">Mike</option>
                 </select>
                 
-                <div style="margin-top: 15px; text-align: left; padding-top: 10px; border-top: 1px dashed #ccc;">
+                <div style="margin-top: 15px; text-align: left;">
                     <label style="font-size: 0.8em; font-weight: bold; color: var(--primary);">Pas op wat je zegt!</label>
                     <textarea id="secretInput" placeholder="..."></textarea>
-                    <button onclick="sendToBoard()" class="action-btn" style="background: #555;">Zet op bord</button>
+                    <button onclick="sendToBoard()" style="background:#555; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top: 5px;">Zet op bord</button>
                 </div>
 
-                <button onclick="login()" class="action-btn" style="margin-top: 20px;">Start de les</button>
-                <button onclick="resetInputs()" class="reset-link">Invoer wissen / Reset</button>
+                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top: 10px;">Start de les</button>
+                <button onclick="resetInputs()" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; margin-top:15px; font-size:0.8em;">Reset invoer</button>
             </div>
         </div>
     </div>
 
-  <!-- Scherm 2: Uitleg (Hersteld met nieuwe tekst) -->
+    <!-- Scherm 2: Uitleg -->
     <div id="screen-2" class="screen">
         <div class="content-container">
-            <h1>Zinsontleding: Stappenplan</h1>
-            
+            <h1>Zinsontleding</h1>
             <div class="grammar-rule">
-                <h3>1. Persoonsvorm (pv)</h3>
-                <ul>
-                    <li>Belangrijkste werkwoord.</li>
-                    <li>Maak de zin vragend (de pv komt vooraan).</li>
-                    <li>Verander de tijd (de pv verandert mee).</li>
-                </ul>
+                <h3>* Persoonsvorm (pv)</h3>
+                <p>→ belangrijkste werkwoord → vraagzin<br>→ tijd veranderen</p>
             </div>
-
             <div class="grammar-rule">
-                <h3>2. Gezegde (gez)</h3>
-                <p>Alle werkwoorden die in de zin voorkomen.</p>
+                <h3>* Gezegde (gez)</h3>
+                <p>→ alle werkwoorden die in de zin voorkomen.</p>
             </div>
-
             <div class="grammar-rule">
-                <h3>3. Onderwerp (ow)</h3>
-                <ul>
-                    <li>Belangrijkste speler of spelers (mens, dier, plant of ding).</li>
-                    <li>Voert de persoonsvorm uit.</li>
-                    <li><strong>Vraag:</strong> Wie of wat + pv?</li>
-                </ul>
+                <h3>* Onderwerp (ow)</h3>
+                <p>→ belangrijkste speler, of spelers (mens,dier, plant of ding) in de zin → voert de persoonsvorm uit → wie+ pv?</p>
             </div>
-
             <div class="grammar-rule">
-                <h3>4. Lijdend Voorwerp (lv)</h3>
-                <ul>
-                    <li>Tweede speler (mens, dier, plant of ding).</li>
-                    <li>Met deze speler gebeurt iets in de zin.</li>
-                    <li><strong>Vraag:</strong> Wie of wat + gez + ow?</li>
-                </ul>
+                <h3>* Lijdend Voorwerp (lv)</h3>
+                <p>→ tweede speler, of (mens, dier, plant of ding) in de zin → met deze speler gebeurt iets in de zin → Wie of wat + ow + gez?</p>
             </div>
         </div>
     </div>
+
     <!-- Scherm 3: Digibord -->
     <div id="screen-3" class="screen">
         <div id="label-layer-3" class="drag-layer"></div>
@@ -131,7 +112,7 @@
         </div>
     </div>
 
-    <!-- Scherm 4 & 5 (PDFs) -->
+    <!-- Scherm 4 & 5 -->
     <div id="screen-4" class="screen">
         <embed src="lesmateriaal.pdf" type="application/pdf">
         <div id="label-layer-4" class="drag-layer"></div>
@@ -148,7 +129,7 @@
         </div>
     </div>
 
-    <!-- Scherm 6: Oefening -->
+    <!-- Scherm 6 -->
     <div id="screen-6" class="screen">
         <iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe>
     </div>
@@ -170,28 +151,24 @@
         let offset = { x: 0, y: 0 };
         window.currentClass = "";
 
-        // Alleen verzenden naar bord
         window.sendToBoard = () => {
             const klas = document.getElementById('classSelect').value;
             const secret = document.getElementById('secretInput').value;
-            if(!klas) return alert("Kies eerst een klas!");
-            if(secret.trim() === "") return alert("Typ eerst een zin!");
-
+            if(!klas) return alert("Kies een klas!");
+            if(secret.trim() === "") return;
+            
             window.currentClass = klas;
             push(ref(db, `classes/${window.currentClass}/labels/s3`), {
                 text: secret,
                 x: Math.random() * 200 + 50,
                 y: Math.random() * 300 + 100
             });
-            document.getElementById('secretInput').value = ""; // Maak leeg na verzenden
-            alert("Zin op bord gezet!");
+            document.getElementById('secretInput').value = "";
         };
 
-        // Inloggen
         window.login = () => {
             const klas = document.getElementById('classSelect').value;
             if(!klas) return alert("Kies een klas!");
-            
             window.currentClass = klas;
             document.getElementById('main-nav').style.display = 'flex';
             window.showScreen(2);
