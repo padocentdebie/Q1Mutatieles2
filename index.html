@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Q1Mutatie Les 2 - Oorspronkelijke Staat Hersteld</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet Kaartbibliotheek -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root { --primary: #003082; --secondary: #f0f2f5; --accent: #d32f2f; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--secondary); margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
         #main-nav { background: var(--primary); padding: 10px; display: none; justify-content: center; flex-wrap: wrap; gap: 8px; z-index: 2000; }
-        .nav-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em; }
+        .nav-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
         .nav-btn.active { background: var(--white); color: var(--primary); }
 
         .screen { flex-grow: 1; display: none; width: 100%; height: calc(100vh - 60px); position: relative; overflow: hidden; }
@@ -33,10 +37,68 @@
 
         #screen-login { display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #003082 0%, #0056b3 100%); height: 100vh; }
         .login-box { background: var(--white); padding: 30px; border-radius: 15px; text-align: center; width: 350px; }
-        input[type="text"], select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        input[type="text"], select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
         
         iframe, embed { width: 100%; height: 100%; border: none; }
         .pen-active-btn { background: #4caf50 !important; color: white !important; }
+
+        /* ─── STIJLEN VOOR SCHERM 7 (MUTATIE JEUGDOVERLAST) ─── */
+        #screen-8 { overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .s8-wrapper { max-width: 1400px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+        
+        .oc-panel { background: #fff; border: 2px solid #333; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .oc-header { background: #c0392b; color: #fff; padding: 10px 16px; font-weight: bold; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .oc-header .pulse-dot { width: 10px; height: 10px; background: #ffcc00; border-radius: 50%; display: inline-block; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1);} 50% { opacity:0.4; transform:scale(1.2);} }
+        .oc-body { display: grid; grid-template-columns: 1.2fr 1fr; background: #1a1a1a; }
+        @media (max-width: 900px) { .oc-body { grid-template-columns: 1fr; } }
+        .oc-text-box { padding: 16px; font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 1.6; color: #33ff88; white-space: pre-wrap; }
+        #jeugd-map { height: 240px; width: 100%; background: #ddd; z-index: 10; }
+        .oc-controls { padding: 10px 16px; background: #ecf0f1; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ddd; flex-wrap: wrap; }
+        .btn-oc-play { background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-oc-stop { background: #7f8c8d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .s8-split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 950px) { .s8-split-layout { grid-template-columns: 1fr; } }
+
+        /* Chat Panel */
+        .chat-panel { background: #fff; border: 2px solid #ccc; border-radius: 10px; height: 680px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .chat-top { background: var(--primary); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+        .chat-top-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e74c3c; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; display: flex; flex-direction: column; gap: 10px; }
+        .c-msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.92rem; line-height: 1.4; word-wrap: break-word; }
+        .c-msg.bot { align-self: flex-start; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 2px; }
+        .c-msg.user { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
+        .c-msg.typing { align-self: flex-start; background: #fff; border: 1px solid #ddd; font-style: italic; color: #777; }
+        
+        .chat-hints { padding: 8px 12px; background: #fff; border-top: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 6px; }
+        .hint-btn { background: #ecf0f1; border: 1px solid #ccc; padding: 5px 10px; font-size: 0.8rem; border-radius: 12px; cursor: pointer; }
+        .hint-btn:hover { background: #e0e0e0; }
+
+        .chat-inputs { display: flex; padding: 10px; background: #fff; border-top: 1px solid #ddd; gap: 8px; }
+        .chat-inputs input { margin: 0; padding: 10px 12px; }
+        .chat-inputs button { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* ASTMA Form Panel */
+        .astma-panel { background: #fff; border: 2px solid #ccc; border-radius: 10px; padding: 20px; height: 680px; overflow-y: auto; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .astma-panel h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .form-row { margin-bottom: 12px; }
+        .form-row label { display: block; font-weight: bold; color: var(--primary); margin-bottom: 4px; font-size: 0.9rem; }
+        .form-row textarea { width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; box-sizing: border-box; }
+        .save-indicator { font-size: 0.82rem; color: #27ae60; font-style: italic; margin-top: 6px; }
+
+        /* Livefeed */
+        .livefeed-panel { background: #fff; border: 2px solid #ccc; border-radius: 10px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .livefeed-panel h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top: 15px; }
+        .feed-card { background: #fafafa; border: 1px solid #ddd; border-left: 5px solid var(--primary); border-radius: 8px; padding: 12px; font-size: 0.9rem; }
+        .feed-card .s-name { font-weight: bold; color: var(--primary); font-size: 1rem; margin-bottom: 4px; display: block; }
+        .feed-card .c-tag { font-size: 0.8rem; color: #c0392b; font-weight: bold; margin-bottom: 8px; }
+        .feed-card .qa-line { margin-bottom: 4px; }
+        .feed-card .qa-line strong { color: #555; }
+        .rev-bar { margin-top: 10px; padding-top: 6px; border-top: 1px dashed #ccc; display: flex; justify-content: space-between; align-items: center; }
+        .btn-rev { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .btn-rev.done { background: #27ae60; cursor: default; }
     </style>
 </head>
 <body>
@@ -48,6 +110,7 @@
         <button class="nav-btn" onclick="showScreen(5)">4. PDF Zinsdelen</button>
         <button class="nav-btn" onclick="showScreen(6)">5. Oefening A</button>
         <button class="nav-btn" onclick="showScreen(7)">6. Oefening B</button>
+        <button class="nav-btn" onclick="showScreen(8)">7. Mutatie Jeugd</button>
     </nav>
 
     <!-- Oorspronkelijk Inlogscherm -->
@@ -134,6 +197,82 @@
     <div id="screen-6" class="screen"><iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe></div>
     <div id="screen-7" class="screen"><iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe></div>
 
+    <!-- ═══════════ SCHERM 8: 7. MUTATIE JEUGDOVERLAST (MET AI-GROEPSCHAT) ═══════════ -->
+    <div id="screen-8" class="screen">
+        <div class="s8-wrapper">
+            <!-- OC Melding & Leaflet Kaart -->
+            <div class="oc-panel">
+                <div class="oc-header">
+                    <span class="pulse-dot"></span> OPERATIONEEL CENTRUM — LIVE MELDING JEUGDOVERLAST
+                    <span id="jeugd-casus-badge" style="margin-left:auto; background:rgba(0,0,0,0.3); padding:4px 10px; border-radius:4px; font-size:0.8rem;"></span>
+                </div>
+                <div class="oc-body">
+                    <div class="oc-text-box" id="jeugd-oc-tekst">Laden van melding...</div>
+                    <div id="jeugd-map"></div>
+                </div>
+                <div class="oc-controls">
+                    <button class="btn-oc-play" onclick="speakJeugdOC()">▶ Voorlezen</button>
+                    <button class="btn-oc-stop" onclick="stopJeugdOC()">⏹ Stop</button>
+                    <span style="font-size:0.85rem; color:#555; margin-left:auto;">📍 Locatie Amersfoort interactief weergegeven</span>
+                </div>
+            </div>
+
+            <!-- Twee Kolommen: Links AI-Groepschat, Rechts ASTMA-Formulier -->
+            <div class="s8-split-layout">
+                <!-- AI Groepschat -->
+                <div class="chat-panel">
+                    <div class="chat-top">
+                        <div class="chat-top-avatar"><i class="fa-solid fa-users"></i></div>
+                        <div>
+                            <strong id="jeugd-chat-title">Tieners ter plaatse</strong><br>
+                            <small id="jeugd-chat-sub">🤖 AI Groepsdynamiek Actief</small>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="jeugd-chat-body"></div>
+                    <div class="chat-hints" id="jeugd-chat-hints"></div>
+                    <div class="chat-inputs">
+                        <input type="text" id="jeugd-chat-input" placeholder="Typ je vraag of vordering aan de jongeren..." autocomplete="off">
+                        <button onclick="sendJeugdChat()">Verstuur</button>
+                    </div>
+                </div>
+
+                <!-- ASTMA Formulier -->
+                <div class="astma-panel">
+                    <h3>Jouw Mutatie (ASTMA)</h3>
+                    <div class="form-row">
+                        <label>Aanleiding</label>
+                        <textarea id="astma-aanleiding" placeholder="Wie ben je, wat is je taak en wat kreeg je door van het OC?"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Situatie</label>
+                        <textarea id="astma-situatie" placeholder="Beschrijf de situatie en de groep bij aankomst ter plaatse."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Toedracht</label>
+                        <textarea id="astma-toedracht" placeholder="Wat is er precies gebeurd? Beantwoord de Gouden W's n.a.v. het verhoor."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Maatregelen</label>
+                        <textarea id="astma-maatregelen" placeholder="Welke acties/vorderingen heb je ondernomen (ID, waarschuwing, schade)?"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Afhandeling</label>
+                        <textarea id="astma-afhandeling" placeholder="Hoe is het incident afgesloten (ouders, Halt, heengezonden)?"></textarea>
+                    </div>
+                    <div class="save-indicator" id="astma-save-status">Automatisch opslaan ingeschakeld...</div>
+                </div>
+            </div>
+
+            <!-- Livefeed van klasgenoten -->
+            <div class="livefeed-panel">
+                <h3>📡 Live Mutaties van Klasgenoten (<span id="feed-class-title">-</span>)</h3>
+                <div class="feed-grid" id="jeugd-livefeed">
+                    <p style="color:#777;">Nog geen mutaties ingeleverd...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -147,7 +286,10 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const GEMINI_API_KEY = firebaseConfig.apiKey;
+
         window.currentClass = "";
+        window.currentStudentName = "";
         let isPenActive = false;
         let drawing = false;
 
@@ -158,10 +300,14 @@
         let dragOffset = { x: 0, y: 0 };
 
         window.login = () => {
+            const naam = document.getElementById('studentName').value.trim();
             const klas = document.getElementById('classSelect').value;
+            if(!naam) return alert("Vul je naam in!");
             if(!klas) return alert("Kies een klas!");
             window.currentClass = klas;
+            window.currentStudentName = naam;
             document.getElementById('main-nav').style.display = 'flex';
+            document.getElementById('feed-class-title').textContent = klas;
             window.showScreen(2);
             setupSync();
             setupDrawing();
@@ -170,9 +316,11 @@
 
         window.showScreen = (n) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(`screen-${n}`).classList.add('active');
+            const targetScreen = document.getElementById(`screen-${n}`);
+            if (targetScreen) targetScreen.classList.add('active');
             document.querySelectorAll('.nav-btn').forEach((btn, i) => btn.classList.toggle('active', (i+2) === n));
             if(n >= 3 && n <= 5) resizeCanvas(n);
+            if(n === 8) initJeugdScreen();
         };
 
         function setupGlobalDragEvents() {
@@ -313,6 +461,395 @@
             document.getElementById('classSelect').selectedIndex = 0;
             document.getElementById('secretInput').value = "";
         };
+
+        // ═══════════════════════════════════════════════════════════════════
+        // LOGICA VOOR SCHERM 7 (MUTATIE JEUGD - MANIER 1 GROEPSCHAT + LEAFLET)
+        // ═══════════════════════════════════════════════════════════════════
+        const JEUGD_CASUSSEN = [
+            {
+                id: 0,
+                locatieNaam: "Kamp, Amersfoort",
+                coords: [52.1586, 5.3922],
+                groepNaam: "Liam (14), Milan (15), Sem (14) & Sophie (14)",
+                ocText: `Hier het Operationeel Centrum voor de eenheid in Amersfoort.
+Melding jeugdoverlast op de Kamp ter hoogte van de Bloemendalsestraat.
+Melder is een passerende automobiliste: vier jongeren staan vanuit het struikgewas besjes en takken naar passerende auto's te gooien. Haar voorruit werd geraakt, wat leidde tot een gevaarlijke schrikreactie.
+Graag ter plaatse voor controle en aanspreken.
+Einde bericht.`,
+                welcomeMsg: "Milan: 'Ehh... goeiemiddag agenten. Is er een probleem ofzo? We stonden hier gewoon even te chillen hoor...'",
+                hints: [
+                    "Toon jullie legitimatiebewijzen op grond van de WID!",
+                    "Waarom gooien jullie met besjes naar rijdende auto's?",
+                    "Weten jullie wel hoe gevaarlijk dat is voor het verkeer?",
+                    "Wie van jullie had het idee om dit te doen?",
+                    "Ik ga jullie ouders hierover inlichten."
+                ],
+                systemPrompt: `Jullie zijn een groep van 4 tieners in Amersfoort op de Kamp: Milan (15, grote mond, woordvoerder), Liam (14, laconiek meelopertje), Sem (14, flapuit) en Sophie (14, gevoelig meisje).
+GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+- Milan doet eerst onschuldig ('we deden niks').
+- Liam lacht een beetje zenuwachtig.
+- Als de agent vraagt naar de besjes, flapt Sem eruit dat Milan zei dat het vet was voor een TikTok-filmpje.
+- Als de agent indringend uitlegt dat automobilisten kunnen schrikken en een dodelijk ongeluk kunnen veroorzaken, schrikken jullie heel erg! Sophie begint bijna te huilen en biedt direct excuses aan. Milan en Liam schamen zich kapot.
+- Als de agent ID vordert, geven jullie direct jullie namen en leeftijden op (Milan de Ruiter 15, Liam van der Laan 14, Sem Koster 14, Sophie Visser 14).
+- Laat in de antwoorden Milan spreken, en soms Sophie of Sem tussen haakjes of met hun naam ervoor. Reageer natuurlijk en als echte Nederlandse tieners (max 2 tot 3 zinnen per reactie).`,
+                fallback: "Milan: 'Sorry agent, we zagen het als een grapje, maar we snappen nu echt dat het levensgevaarlijk was. We doen het nooit meer!'"
+            },
+            {
+                id: 1,
+                locatieNaam: "Willem Barentszstraat (Aldi), Amersfoort",
+                coords: [52.1648, 5.3732],
+                groepNaam: "Jayden (15), Daan (16), Rayan (15) & Levi (15)",
+                ocText: `Hier het Operationeel Centrum.
+Melding van vernieling en overlast bij de Aldi aan de Willem Barentszstraat (Neptunusplein).
+Vier jongens rammen op hoge snelheid met winkelwagentjes tegen de metalen gevel van het winkelpand. Er zit een grote deuk in de gevelplaat en twee wagentjes zijn verbogen.
+De bedrijfsleider wil de schade (ca. €650,-) verhalen en eist de persoonsgegevens van de daders.
+Einde bericht.`,
+                welcomeMsg: "Jayden: 'Yo politie, wat is er man? We brachten die winkelwagens alleen maar netjes terug hoor!'",
+                hints: [
+                    "Ik vorder direct jullie ID's ter zake vernieling (art. 350 Sr)!",
+                    "Waarom rammen jullie met die wagens tegen de gevel van de Aldi?",
+                    "Wie heeft die deuk in de gevel veroorzaakt?",
+                    "De schade van €650,- gaat op jullie ouders verhaald worden.",
+                    "Er hangen hier bewakingscamera's, dus ontkennen heeft geen zin."
+                ],
+                systemPrompt: `Jullie zijn 4 jongens bij de Aldi aan de Willem Barentszstraat: Jayden (15, leider, grote mond), Daan (16, lomp en stoer), Rayan (15, bang voor zijn vader) en Levi (15, verlinkt snel).
+GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+- Jayden ontkent eerst brutaal: 'die deuk zat er allang!'
+- Daan lacht en zegt dat de wieltjes al kapot waren.
+- Als de agent spreekt over bewakingscamera's en vordert op grond van de WID voor vernieling (art. 350 Sr), raakt Rayan in paniek ('Bro, m'n vader maakt me af als er een rekening komt!'). Levi bekent dat Jayden en Daan keihard tegen de muur aan ramden.
+- Uiteindelijk moeten jullie alle 4 je gegevens afgeven: Jayden van Dijk (15), Daan Brouwer (16), Rayan El Idrissi (15) en Levi Bakker (15).
+- Reageer kort, brutaal maar bind in bij juridische druk (max 2 tot 3 zinnen per beurt).`,
+                fallback: "Jayden: 'Tsss... vooruit dan. Jayden van Dijk, 15 jaar. Maar Daan duwde net zo hard mee hoor!'"
+            },
+            {
+                id: 2,
+                locatieNaam: "Utrechtseweg 293, Amersfoort",
+                coords: [52.1408, 5.3468],
+                groepNaam: "Jesse (16), Lars (16), Anouk (15) & Finn (16)",
+                ocText: `Eenheid Amersfoort-Zuid, met spoed naar de Utrechtseweg 293 nabij de school.
+Melder ziet een groep scholieren die met elkaar op de vuist gaan. Er wordt over en weer geschopt, geduwd en tassen worden over straat getrapt.
+Mogelijk escalatie naar openlijk geweld.
+Einde bericht.`,
+                welcomeMsg: "Jesse: 'Blijf van me af man! Hij moet gewoon z'n bek houden over m'n vriendin!' \nLars: 'Jij viel me zomaar aan idioot, je hebt m'n hele schooltas kapotgetrapt!'",
+                hints: [
+                    "Direct afstand nemen en mond houden, allebei!",
+                    "Ik vorder jullie ID's op grond van de Politiewet!",
+                    "Waarom vallen jullie elkaar fysiek aan?",
+                    "Wie gaat die kapotte tas van Lars vergoeden?",
+                    "Stop met filmen, we gaan dit nu met de schoolleiding oplossen."
+                ],
+                systemPrompt: `Jullie zijn scholieren bij een incident aan de Utrechtseweg 293: Jesse (16, opvliegende vechter), Lars (16, slachtoffer met schaafplek en kapotte tas), Anouk (15, stond te filmen) en Finn (16, probeerde te sussen).
+GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+- Jesse en Lars vliegen elkaar verbaal nog steeds aan als de agent erbij staat.
+- Jesse vindt dat hij gelijk heeft vanwege roddels over zijn vriendin.
+- Lars eist dat zijn schooltas (€50,-) wordt vergoed en wijst naar zijn wang.
+- Anouk stopt pas met filmen als de agent het vordert. Finn verklaart eerlijk dat Jesse begon met duwen en schoppen.
+- Als de agent de conrector erbij haalt en spreekt over openlijke geweldpleging, binden ze in en geven hun gegevens op: Jesse Smit (16), Lars Meijer (16), Anouk Vos (15) en Finn de Graaf (16).
+- Reageer opgewonden en theatraal zoals ruziënde scholieren (max 2 tot 3 zinnen).`,
+                fallback: "Jesse: 'Ja oké agent, ik had niet moeten schoppen. Ik betaal die tas wel. Jesse Smit, 16 jaar.'"
+            },
+            {
+                id: 3,
+                locatieNaam: "Barchman Wuytierslaan 57, Amersfoort",
+                coords: [52.1528, 5.3524],
+                groepNaam: "Tariq (16), Kasper (15), Bram (16) & Mo (15)",
+                ocText: `Hier het Operationeel Centrum.
+Melding van overlast bij DierenPark Amersfoort aan de Barchman Wuytierslaan 57.
+Beveiliger dhr. Hendriks meldt een groep jongeren met een fatbike en een zware speaker die de oversteekplaats blokkeren, harde muziek draaien en jonge gezinnen met buggy's hinderen en intimideren.
+Verzoek om handhaving van de openbare orde.
+Einde bericht.`,
+                welcomeMsg: "Tariq: 'Ewa agent, wat is het probleem? Muziek luisteren is toch niet verboden in Nederland? We chillen gewoon!'",
+                hints: [
+                    "Zet die speaker nu direct uit!",
+                    "Jullie blokkeren de doorgang voor kinderwagens (APV overtreding).",
+                    "Toon je legitimatiebewijs of ik vorder het!",
+                    "Als jullie niet vertrekken neem ik die geluidsbox in beslag.",
+                    "De beveiliger heeft al geklaagd over intimidatie van bezoekers."
+                ],
+                systemPrompt: `Jullie zijn 4 jongeren voor DierenPark Amersfoort: Tariq (16, bijdehante woordvoerder met JBL box), Kasper (15, op fatbike), Bram (16) en Mo (15).
+GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+- Tariq praat met straattaal en doet quasi-onschuldig ('openbare weg toch').
+- Kasper fietst rondjes en lacht.
+- Als de agent wijst op de gezinnen met kinderwagens die door de modder moeten en spreekt over APV geluidshinder en inbeslagname van de box, bindt Tariq in: 'Rustig agent, we zetten 'm al uit!'
+- Ze werken schoorvoetend mee aan de ID-controle: Tariq Mansour (16), Kasper van Leeuwen (15), Bram Vink (16) en Mo El Amrani (15).
+- Ze vertrekken als de agent een formele vordering doet om de plek te verlaten.
+- Reageer vlot, tikje brutaal maar niet gewelddadig (max 2 tot 3 zinnen per reactie).`,
+                fallback: "Tariq: 'Is goed wout, ik zet die box al uit man. Niet meteen boetes strooien, we gaan al weg richting het bosbad.'"
+            },
+            {
+                id: 4,
+                locatieNaam: "Liendertseweg 230, Amersfoort",
+                coords: [52.1627, 5.4038],
+                groepNaam: "Stijn (15), Damian (15) & Noa (14)",
+                ocText: `Hier het Operationeel Centrum.
+Melding van omwonenden van het wijkpark aan de Liendertseweg 230.
+Drie minderjarigen zitten op een bankje bij de speeltoestellen waar kleine kinderen spelen. Ze roken vapes en drinken geopende blikken mixdrank (alcohol). Lege blikjes worden in de bosjes geschopt.
+Controle gewenst op NIX18 en APV afval.
+Einde bericht.`,
+                welcomeMsg: "Damian: 'Hoi meneer de agent... Uhh, we zaten hier alleen maar te kletsen hoor, we doen echt niks verkeerd!'",
+                hints: [
+                    "Wat zit er in die blikjes en van wie is die vape in je mouw?",
+                    "Jullie zijn minderjarig, alcohol nuttigen op straat is verboden!",
+                    "Ik vorder jullie legitimatiebewijzen op grond van de WID.",
+                    "Gooi die drank nu leeg in het putje en ruim die blikjes op.",
+                    "Ik ga contact opnemen met jullie ouders."
+                ],
+                systemPrompt: `Jullie zijn 3 tieners in een speeltuin aan de Liendertseweg: Damian (15, heeft blikje rum-cola), Stijn (15, probeert vape in mouw te stoppen) en Noa (14, schaamt zich en is bang voor haar ouders).
+GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+- Damian probeert te beweren dat de blikjes er al stonden.
+- Stijn ontkent eerst dat hij een vape heeft.
+- Noa klapt meteen dicht als de agent over ouders en kleine kinderen in de speeltuin begint: 'Sorry agent, Damian kocht die blikjes bij een vriend en Stijn had die vape mee!'
+- Damian en Stijn balen dat Noa hen verraadt, maar gooien de blikjes braaf leeg in de put als de agent dat beveelt. Stijn overhandigt zijn vape.
+- Gegevens: Damian de Ridder (15), Stijn Meulendijk (15), Noa van Beek (14).
+- Reageer betrapt, licht ruziënd onderling en meewerkend (max 2 tot 3 zinnen).`,
+                fallback: "Noa: 'Alsjeblieft bel mijn moeder niet agent! We ruimen alles nu meteen op en gooien de drank weg!'"
+            }
+        ];
+
+        let currentJeugdCasus = null;
+        let jeugdMap = null;
+        let jeugdMarker = null;
+        let jeugdChatHistory = [];
+        let jeugdSaveTimer = null;
+        let jeugdUtterance = null;
+        let jeugdInitialized = false;
+
+        function initJeugdScreen() {
+            if (!window.currentClass) return;
+            assignJeugdCasus();
+            setupJeugdMap();
+            setupASTMASync();
+            setupJeugdFeed();
+        }
+
+        function assignJeugdCasus() {
+            const str = (window.currentStudentName + '_' + window.currentClass).toLowerCase();
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = (hash << 5) - hash + str.charCodeAt(i);
+            const idx = Math.abs(hash) % JEUGD_CASUSSEN.length;
+            currentJeugdCasus = JEUGD_CASUSSEN[idx];
+
+            document.getElementById('jeugd-oc-tekst').innerText = currentJeugdCasus.ocText;
+            document.getElementById('jeugd-casus-badge').innerText = `Casus: ${currentJeugdCasus.locatieNaam}`;
+            document.getElementById('jeugd-chat-title').innerText = currentJeugdCasus.groepNaam;
+
+            // Render hint buttons
+            const hintsDiv = document.getElementById('jeugd-chat-hints');
+            hintsDiv.innerHTML = '';
+            currentJeugdCasus.hints.forEach(h => {
+                const b = document.createElement('button');
+                b.className = 'hint-btn';
+                b.textContent = h;
+                b.onclick = () => {
+                    document.getElementById('jeugd-chat-input').value = h;
+                    window.sendJeugdChat();
+                };
+                hintsDiv.appendChild(b);
+            });
+
+            // Start chat if empty
+            const body = document.getElementById('jeugd-chat-body');
+            if (body && body.children.length === 0) {
+                addJeugdMsg('bot', currentJeugdCasus.welcomeMsg);
+                jeugdChatHistory = [{ role: 'model', parts: [{ text: currentJeugdCasus.welcomeMsg }] }];
+            }
+        }
+
+        function setupJeugdMap() {
+            if (!currentJeugdCasus) return;
+            setTimeout(() => {
+                if (!jeugdMap) {
+                    jeugdMap = L.map('jeugd-map').setView(currentJeugdCasus.coords, 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(jeugdMap);
+                    jeugdMarker = L.marker(currentJeugdCasus.coords).addTo(jeugdMap)
+                        .bindPopup(`<b>${currentJeugdCasus.locatieNaam}</b><br>${currentJeugdCasus.groepNaam}`)
+                        .openPopup();
+                } else {
+                    jeugdMap.setView(currentJeugdCasus.coords, 16);
+                    if (jeugdMarker) {
+                        jeugdMarker.setLatLng(currentJeugdCasus.coords)
+                            .bindPopup(`<b>${currentJeugdCasus.locatieNaam}</b><br>${currentJeugdCasus.groepNaam}`)
+                            .openPopup();
+                    }
+                    jeugdMap.invalidateSize();
+                }
+            }, 200);
+        }
+
+        function addJeugdMsg(role, text) {
+            const body = document.getElementById('jeugd-chat-body');
+            if (!body) return;
+            const d = document.createElement('div');
+            d.className = `c-msg ${role}`;
+            d.textContent = text;
+            body.appendChild(d);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        // Live Chat met Groep Tieners via Gemini API
+        window.sendJeugdChat = async () => {
+            const input = document.getElementById('jeugd-chat-input');
+            const text = input.value.trim();
+            if (!text || !currentJeugdCasus) return;
+            input.value = '';
+
+            addJeugdMsg('user', text);
+            jeugdChatHistory.push({ role: 'user', parts: [{ text: text }] });
+
+            const body = document.getElementById('jeugd-chat-body');
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'c-msg typing';
+            typingIndicator.textContent = 'Tieners overleggen...';
+            body.appendChild(typingIndicator);
+            body.scrollTop = body.scrollHeight;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: currentJeugdCasus.systemPrompt }] },
+                        contents: jeugdChatHistory,
+                        generationConfig: { temperature: 0.8, maxOutputTokens: 250 }
+                    })
+                });
+
+                typingIndicator.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply) {
+                        jeugdChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+                        addJeugdMsg('bot', reply);
+                        return;
+                    }
+                }
+                throw new Error("API antwoord ongeldig");
+            } catch (err) {
+                console.warn("AI fout of offline, fallback naar scenario:", err);
+                if (typingIndicator.parentElement) typingIndicator.remove();
+                addJeugdMsg('bot', currentJeugdCasus.fallback);
+                jeugdChatHistory.push({ role: 'model', parts: [{ text: currentJeugdCasus.fallback }] });
+            }
+        };
+
+        // ASTMA Invoer & Realtime Opslaan
+        function setupASTMASync() {
+            if (jeugdInitialized) return;
+            jeugdInitialized = true;
+
+            const fields = ['aanleiding', 'situatie', 'toedracht', 'maatregelen', 'afhandeling'];
+            fields.forEach(f => {
+                const el = document.getElementById(`astma-${f}`);
+                if (!el) return;
+                el.addEventListener('input', () => {
+                    document.getElementById('astma-save-status').textContent = 'Bezig met opslaan...';
+                    if (jeugdSaveTimer) clearTimeout(jeugdSaveTimer);
+                    jeugdSaveTimer = setTimeout(saveMyASTMA, 500);
+                });
+            });
+
+            // Input Enter key support voor chat
+            document.getElementById('jeugd-chat-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); window.sendJeugdChat(); }
+            });
+        }
+
+        function saveMyASTMA() {
+            if (!window.currentClass || !window.currentStudentName || !currentJeugdCasus) return;
+            const payload = {
+                studentName: window.currentStudentName,
+                casusLocatie: currentJeugdCasus.locatieNaam,
+                timestamp: Date.now(),
+                data: {
+                    aanleiding: document.getElementById('astma-aanleiding').value,
+                    situatie: document.getElementById('astma-situatie').value,
+                    toedracht: document.getElementById('astma-toedracht').value,
+                    maatregelen: document.getElementById('astma-maatregelen').value,
+                    afhandeling: document.getElementById('astma-afhandeling').value
+                }
+            };
+            const safeKey = encodeKey(window.currentStudentName);
+            set(ref(db, `classes/${window.currentClass}/mutaties_jeugd/${safeKey}`), payload)
+                .then(() => {
+                    document.getElementById('astma-save-status').textContent = '✓ Opgeslagen om ' + new Date().toLocaleTimeString('nl-NL');
+                })
+                .catch(err => {
+                    document.getElementById('astma-save-status').textContent = '⚠️ Fout bij opslaan: ' + err.message;
+                });
+        }
+
+        // Livefeed van alle studenten in de klas
+        function setupJeugdFeed() {
+            onValue(ref(db, `classes/${window.currentClass}/mutaties_jeugd`), (snap) => {
+                const feed = document.getElementById('jeugd-livefeed');
+                const data = snap.val();
+                if (!data || Object.keys(data).length === 0) {
+                    feed.innerHTML = '<p style="color:#777;">Nog geen mutaties ingeleverd...</p>';
+                    return;
+                }
+                feed.innerHTML = '';
+                const items = Object.entries(data).sort((a,b) => (b[1].timestamp||0) - (a[1].timestamp||0));
+                
+                items.forEach(([key, item]) => {
+                    const card = document.createElement('div');
+                    card.className = 'feed-card';
+                    const isMine = (item.studentName === window.currentStudentName);
+                    const reviewers = item.reviews ? Object.keys(item.reviews) : [];
+                    const reviewedByMe = item.reviews && item.reviews[encodeKey(window.currentStudentName)];
+
+                    let html = `<span class="s-name">${escapeHtml(item.studentName)}${isMine ? ' (jij)' : ''}</span>`;
+                    html += `<div class="c-tag"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(item.casusLocatie || 'Onbekend')}</div>`;
+                    
+                    const LBL = { aanleiding:'Aanleiding', situatie:'Situatie', toedracht:'Toedracht', maatregelen:'Maatregelen', afhandeling:'Afhandeling' };
+                    ['aanleiding','situatie','toedracht','maatregelen','afhandeling'].forEach(k => {
+                        const val = item.data && item.data[k] ? item.data[k] : '—';
+                        html += `<div class="qa-line"><strong>${LBL[k]}:</strong> ${escapeHtml(val)}</div>`;
+                    });
+
+                    html += `<div class="rev-bar">`;
+                    html += `<small style="color:#666;">${reviewers.length ? '✓ Nagekeken door ' + reviewers.length : 'Nog niet nagekeken'}</small>`;
+                    if (!isMine) {
+                        if (reviewedByMe) html += `<button class="btn-rev done" disabled>✓ Nagekeken</button>`;
+                        else html += `<button class="btn-rev" onclick="reviewMutatie('${escapeHtml(key)}')">Markeer als nagekeken</button>`;
+                    }
+                    html += `</div>`;
+
+                    card.innerHTML = html;
+                    feed.appendChild(card);
+                });
+            });
+        }
+
+        window.reviewMutatie = (targetKey) => {
+            if (!window.currentStudentName || !window.currentClass) return;
+            update(ref(db, `classes/${window.currentClass}/mutaties_jeugd/${targetKey}/reviews`), {
+                [encodeKey(window.currentStudentName)]: true
+            });
+        };
+
+        // Spraakfunctie voor de OC-Melding
+        window.speakJeugdOC = () => {
+            if (!('speechSynthesis' in window) || !currentJeugdCasus) return;
+            window.stopJeugdOC();
+            jeugdUtterance = new SpeechSynthesisUtterance(currentJeugdCasus.ocText);
+            jeugdUtterance.lang = 'nl-NL';
+            jeugdUtterance.rate = 0.95;
+            speechSynthesis.speak(jeugdUtterance);
+        };
+
+        window.stopJeugdOC = () => {
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
+            jeugdUtterance = null;
+        };
+
+        function encodeKey(s) { return String(s || '').replace(/[.#$\[\]\/]/g, '_'); }
+        function escapeHtml(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
     </script>
 </body>
 </html>
