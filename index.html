@@ -109,7 +109,7 @@
         <button class="nav-btn" onclick="showScreen(6)">5. Oefening A</button>
         <button class="nav-btn" onclick="showScreen(7)">6. Oefening B</button>
         <button class="nav-btn" onclick="showScreen(8)">7. Mutatie Jeugd</button>
-        <!-- Nieuwe Resetknop voor docent / klas -->
+        <!-- Resetknop voor docent / klas -->
         <button class="nav-btn" style="background:#c0392b;" onclick="resetAllData()">🗑️ Reset Alles</button>
     </nav>
 
@@ -197,7 +197,7 @@
     <div id="screen-6" class="screen"><iframe src="https://learningapps.org/watch?v=p696ntbi323"></iframe></div>
     <div id="screen-7" class="screen"><iframe src="https://learningapps.org/watch?v=p37h8xcpa24"></iframe></div>
 
-    <!-- ═══════════ SCHERM 8: 7. MUTATIE JEUGDOVERLAST (MET GOOGLE STREET VIEW) ═══════════ -->
+    <!-- ═══════════ SCHERM 8: 7. MUTATIE JEUGDOVERLAST (MET DIRECTE STREET VIEW) ═══════════ -->
     <div id="screen-8" class="screen">
         <div class="s8-wrapper">
             <!-- OC Melding & Google Street View Embed -->
@@ -213,7 +213,9 @@
                 <div class="oc-controls">
                     <button class="btn-oc-play" onclick="speakJeugdOC()">▶ Voorlezen</button>
                     <button class="btn-oc-stop" onclick="stopJeugdOC()">⏹ Stop</button>
-                    <span style="font-size:0.85rem; color:#555; margin-left:auto;">📍 Locatie Amersfoort interactief weergegeven</span>
+                    <span style="font-size:0.85rem; color:#555; margin-left:auto;">
+                        📍 <a id="jeugd-sv-link" href="#" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:underline;">Open 360° Street View</a>
+                    </span>
                 </div>
             </div>
 
@@ -477,14 +479,10 @@
                 return;
             }
 
-            // 1. Verwijder alle bordinvoer (labels en tekeningen) in Firebase
             remove(ref(db, `classes/${klas}/labels`));
             remove(ref(db, `classes/${klas}/drawings`));
-
-            // 2. Verwijder alle ingeleverde mutaties en feedback in Firebase
             remove(ref(db, `classes/${klas}/mutaties_jeugd`));
 
-            // 3. Wis lokale invoervelden van het formulier en de geheime zin
             ['aanleiding', 'situatie', 'toedracht', 'maatregelen', 'afhandeling'].forEach(f => {
                 const el = document.getElementById(`astma-${f}`);
                 if (el) el.value = '';
@@ -492,7 +490,6 @@
             const secret = document.getElementById('secretInput');
             if (secret) secret.value = '';
 
-            // 4. Wis lokaal getekende canvasen
             [3, 4, 5].forEach(id => {
                 const canvas = document.getElementById(`canvas-${id}`);
                 if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
@@ -524,14 +521,13 @@ Einde bericht.`,
                     "Ik ga jullie ouders hierover inlichten."
                 ],
                 systemPrompt: `Jullie zijn een groep van 4 tieners in Amersfoort op de Kamp: Milan (15, grote mond, woordvoerder), Liam (14, laconiek meelopertje), Sem (14, flapuit) en Sophie (14, gevoelig meisje).
-GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+GEDRAG & GROEPSDYNAMIEK:
 - Milan doet eerst onschuldig ('we deden niks').
 - Liam lacht een beetje zenuwachtig.
 - Als de agent vraagt naar de besjes, flapt Sem eruit dat Milan zei dat het vet was voor een TikTok-filmpje.
 - Als de agent indringend uitlegt dat automobilisten kunnen schrikken en een dodelijk ongeluk kunnen veroorzaken, schrikken jullie heel erg! Sophie begint bijna te huilen en biedt direct excuses aan. Milan en Liam schamen zich kapot.
 - Als de agent ID vordert, geven jullie direct jullie namen en leeftijden op (Milan de Ruiter 15, Liam van der Laan 14, Sem Koster 14, Sophie Visser 14).
-- Laat in de antwoorden Milan spreken, en soms Sophie of Sem tussen haakjes of met hun naam ervoor. Reageer natuurlijk en als echte Nederlandse tieners (max 2 tot 3 zinnen per reactie).`,
-                fallback: "Milan: 'Sorry agent, we zagen het als een grapje, maar we snappen nu echt dat het levensgevaarlijk was. We doen het nooit meer!'"
+- Laat in de antwoorden Milan spreken, en soms Sophie of Sem tussen haakjes of met hun naam ervoor. Reageer natuurlijk en als echte Nederlandse tieners (max 2 tot 3 zinnen per reactie).`
             },
             {
                 id: 1,
@@ -552,13 +548,12 @@ Einde bericht.`,
                     "Er hangen hier bewakingscamera's, dus ontkennen heeft geen zin."
                 ],
                 systemPrompt: `Jullie zijn 4 jongens bij de Aldi aan de Willem Barentszstraat: Jayden (15, leider, grote mond), Daan (16, lomp en stoer), Rayan (15, bang voor zijn vader) en Levi (15, verlinkt snel).
-GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+GEDRAG & GROEPSDYNAMIEK:
 - Jayden ontkent eerst brutaal: 'die deuk zat er allang!'
 - Daan lacht en zegt dat de wieltjes al kapot waren.
 - Als de agent spreekt over bewakingscamera's en vordert op grond van de WID voor vernieling (art. 350 Sr), raakt Rayan in paniek ('Bro, m'n vader maakt me af als er een rekening komt!'). Levi bekent dat Jayden en Daan keihard tegen de muur aan ramden.
 - Uiteindelijk moeten jullie alle 4 je gegevens afgeven: Jayden van Dijk (15), Daan Brouwer (16), Rayan El Idrissi (15) en Levi Bakker (15).
-- Reageer kort, brutaal maar bind in bij juridische druk (max 2 tot 3 zinnen per beurt).`,
-                fallback: "Jayden: 'Tsss... vooruit dan. Jayden van Dijk, 15 jaar. Maar Daan duwde net zo hard mee hoor!'"
+- Reageer kort, brutaal maar bind in bij juridische druk (max 2 tot 3 zinnen per beurt).`
             },
             {
                 id: 2,
@@ -578,14 +573,13 @@ Einde bericht.`,
                     "Stop met filmen, we gaan dit nu met de schoolleiding oplossen."
                 ],
                 systemPrompt: `Jullie zijn scholieren bij een incident aan de Utrechtseweg 293: Jesse (16, opvliegende vechter), Lars (16, slachtoffer met schaafplek en kapotte tas), Anouk (15, stond te filmen) en Finn (16, probeerde te sussen).
-GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+GEDRAG & GROEPSDYNAMIEK:
 - Jesse en Lars vliegen elkaar verbaal nog steeds aan als de agent erbij staat.
 - Jesse vindt dat hij gelijk heeft vanwege roddels over zijn vriendin.
 - Lars eist dat zijn schooltas (€50,-) wordt vergoed en wijst naar zijn wang.
 - Anouk stopt pas met filmen als de agent het vordert. Finn verklaart eerlijk dat Jesse begon met duwen en schoppen.
 - Als de agent de conrector erbij haalt en spreekt over openlijke geweldpleging, binden ze in en geven hun gegevens op: Jesse Smit (16), Lars Meijer (16), Anouk Vos (15) en Finn de Graaf (16).
-- Reageer opgewonden en theatraal zoals ruziënde scholieren (max 2 tot 3 zinnen).`,
-                fallback: "Jesse: 'Ja oké agent, ik had niet moeten schoppen. Ik betaal die tas wel. Jesse Smit, 16 jaar.'"
+- Reageer opgewonden en theatraal zoals ruziënde scholieren (max 2 tot 3 zinnen).`
             },
             {
                 id: 3,
@@ -606,14 +600,13 @@ Einde bericht.`,
                     "De beveiliger heeft al geklaagd over intimidatie van bezoekers."
                 ],
                 systemPrompt: `Jullie zijn 4 jongeren voor DierenPark Amersfoort: Tariq (16, bijdehante woordvoerder met JBL box), Kasper (15, op fatbike), Bram (16) en Mo (15).
-GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+GEDRAG & GROEPSDYNAMIEK:
 - Tariq praat met straattaal en doet quasi-onschuldig ('openbare weg toch').
 - Kasper fietst rondjes en lacht.
 - Als de agent wijst op de gezinnen met kinderwagens die door de modder moeten en spreekt over APV geluidshinder en inbeslagname van de box, bindt Tariq in: 'Rustig agent, we zetten 'm al uit!'
 - Ze werken schoorvoetend mee aan de ID-controle: Tariq Mansour (16), Kasper van Leeuwen (15), Bram Vink (16) en Mo El Amrani (15).
 - Ze vertrekken als de agent een formele vordering doet om de plek te verlaten.
-- Reageer vlot, tikje brutaal maar niet gewelddadig (max 2 tot 3 zinnen per reactie).`,
-                fallback: "Tariq: 'Is goed wout, ik zet die box al uit man. Niet meteen boetes strooien, we gaan al weg richting het bosbad.'"
+- Reageer vlot, tikje brutaal maar niet gewelddadig (max 2 tot 3 zinnen per reactie).`
             },
             {
                 id: 4,
@@ -634,14 +627,13 @@ Einde bericht.`,
                     "Ik ga contact opnemen met jullie ouders."
                 ],
                 systemPrompt: `Jullie zijn 3 tieners in een speeltuin aan de Liendertseweg: Damian (15, heeft blikje rum-cola), Stijn (15, probeert vape in mouw te stoppen) en Noa (14, schaamt zich en is bang voor haar ouders).
-GEDRAG & GROEPSDYNAMIEK (MANIER 1):
+GEDRAG & GROEPSDYNAMIEK:
 - Damian probeert te beweren dat de blikjes er al stonden.
 - Stijn ontkent eerst dat hij een vape heeft.
 - Noa klapt meteen dicht als de agent over ouders en kleine kinderen in de speeltuin begint: 'Sorry agent, Damian kocht die blikjes bij een vriend en Stijn had die vape mee!'
 - Damian en Stijn balen dat Noa hen verraadt, maar gooien de blikjes braaf leeg in de put als de agent dat beveelt. Stijn overhandigt zijn vape.
 - Gegevens: Damian de Ridder (15), Stijn Meulendijk (15), Noa van Beek (14).
-- Reageer betrapt, licht ruziënd onderling en meewerkend (max 2 tot 3 zinnen).`,
-                fallback: "Noa: 'Alsjeblieft bel mijn moeder niet agent! We ruimen alles nu meteen op en gooien de drank weg!'"
+- Reageer betrapt, licht ruziënd onderling en meewerkend (max 2 tot 3 zinnen).`
             }
         ];
 
@@ -670,7 +662,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
             document.getElementById('jeugd-casus-badge').innerText = `Casus: ${currentJeugdCasus.locatieNaam}`;
             document.getElementById('jeugd-chat-title').innerText = currentJeugdCasus.groepNaam;
 
-            // Render hint buttons
             const hintsDiv = document.getElementById('jeugd-chat-hints');
             hintsDiv.innerHTML = '';
             currentJeugdCasus.hints.forEach(h => {
@@ -684,19 +675,26 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 hintsDiv.appendChild(b);
             });
 
-            // Start chat if empty
             const body = document.getElementById('jeugd-chat-body');
             if (body && body.children.length === 0) {
                 addJeugdMsg('bot', currentJeugdCasus.welcomeMsg);
-                jeugdChatHistory = [{ role: 'model', parts: [{ text: currentJeugdCasus.welcomeMsg }] }];
+                jeugdChatHistory = [];
             }
         }
 
+        // Directe Google Street View embed
         function setupJeugdMap() {
             if (!currentJeugdCasus) return;
             const iframe = document.getElementById('jeugd-map');
+            const lat = currentJeugdCasus.coords[0];
+            const lng = currentJeugdCasus.coords[1];
+
             if (iframe) {
-                iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${GEMINI_API_KEY}&location=${currentJeugdCasus.coords[0]},${currentJeugdCasus.coords[1]}`;
+                iframe.src = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=12,0,0,0,0&source=embed&output=svembed`;
+            }
+            const svLink = document.getElementById('jeugd-sv-link');
+            if (svLink) {
+                svLink.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
             }
         }
 
@@ -710,7 +708,9 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
             body.scrollTop = body.scrollHeight;
         }
 
-        // Live Chat met Groep Tieners via Gemini API
+        // ═══════════════════════════════════════════════════════════════════
+        // SLIMME EN CONTEXTUELE CHATBOT MET GEMINI API & GEEN HERHALINGEN
+        // ═══════════════════════════════════════════════════════════════════
         window.sendJeugdChat = async () => {
             const input = document.getElementById('jeugd-chat-input');
             const text = input.value.trim();
@@ -727,36 +727,106 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
             body.appendChild(typingIndicator);
             body.scrollTop = body.scrollHeight;
 
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        systemInstruction: { parts: [{ text: currentJeugdCasus.systemPrompt }] },
-                        contents: jeugdChatHistory,
-                        generationConfig: { temperature: 0.8, maxOutputTokens: 250 }
-                    })
-                });
-
-                typingIndicator.remove();
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (reply) {
-                        jeugdChatHistory.push({ role: 'model', parts: [{ text: reply }] });
-                        addJeugdMsg('bot', reply);
-                        return;
-                    }
+            // Zorg dat de Gemini API-historie altijd netjes met een 'user' turn start en strikt afwisselt
+            const apiContents = [];
+            jeugdChatHistory.forEach(item => {
+                if (apiContents.length === 0) {
+                    if (item.role === 'user') apiContents.push(item);
+                } else if (apiContents[apiContents.length - 1].role !== item.role) {
+                    apiContents.push(item);
                 }
-                throw new Error("API antwoord ongeldig");
-            } catch (err) {
-                console.warn("AI fout of offline, fallback naar scenario:", err);
-                if (typingIndicator.parentElement) typingIndicator.remove();
-                addJeugdMsg('bot', currentJeugdCasus.fallback);
-                jeugdChatHistory.push({ role: 'model', parts: [{ text: currentJeugdCasus.fallback }] });
+            });
+
+            const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+            let reply = null;
+
+            for (const model of models) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            systemInstruction: { 
+                                parts: [{ 
+                                    text: currentJeugdCasus.systemPrompt + "\n\nBelangrijk: Je hebt de agent eerder begroet met: '" + currentJeugdCasus.welcomeMsg + "'. Reageer direct en interactief op wat de agent vraagt of beveelt. Antwoord als de groep tieners in het Nederlands (max 2 tot 3 zinnen). Val nooit in herhaling!" 
+                                }] 
+                            },
+                            contents: apiContents,
+                            generationConfig: { temperature: 0.75, maxOutputTokens: 250 }
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (candidate) {
+                            reply = candidate.trim();
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Fout bij model ${model}:`, e);
+                }
+            }
+
+            if (typingIndicator.parentElement) typingIndicator.remove();
+
+            if (reply) {
+                jeugdChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+                addJeugdMsg('bot', reply);
+            } else {
+                // Dynamische responder: valt nooit in herhaling en reageert op de inhoud
+                const fallbackReply = generateSmartFallback(text, currentJeugdCasus, jeugdChatHistory.length);
+                jeugdChatHistory.push({ role: 'model', parts: [{ text: fallbackReply }] });
+                addJeugdMsg('bot', fallbackReply);
             }
         };
+
+        // Contextuele responder bij haperende API-verbinding (voorkomt herhaalde antwoorden)
+        function generateSmartFallback(input, casus, turnCount) {
+            const lower = input.toLowerCase();
+            const id = casus.id;
+
+            if (lower.includes('id') || lower.includes('legitimat') || lower.includes('identiteit') || lower.includes('wid') || lower.includes('paspoort') || lower.includes('naam')) {
+                if (id === 0) return "Milan: 'Hier zijn onze ID-kaarten agent: Milan de Ruiter (15), Liam van der Laan (14), Sem Koster (14) en Sophie Visser (14).'";
+                if (id === 1) return "Jayden: 'Tsss oké dan... Jayden van Dijk (15). En dit zijn Daan Brouwer (16), Rayan El Idrissi (15) en Levi Bakker (15).'";
+                if (id === 2) return "Jesse: 'Jesse Smit, 16 jaar. En dit zijn Lars Meijer (16), Anouk Vos (15) en Finn de Graaf (16).'";
+                if (id === 3) return "Tariq: 'Rustig agent, hier: Tariq Mansour (16). Dit zijn Kasper van Leeuwen (15), Bram Vink (16) en Mo El Amrani (15).'";
+                if (id === 4) return "Damian: 'Hier m'n ID meneer: Damian de Ridder (15). Dit zijn Stijn Meulendijk (15) en Noa van Beek (14).'";
+            }
+
+            if (lower.includes('ouder') || lower.includes('vader') || lower.includes('moeder') || lower.includes('thuis') || lower.includes('bellen')) {
+                if (id === 0) return "Sophie: '(begint zachtjes te huilen) Alsjeblieft bel mijn moeder niet! We schamen ons echt kapot, we doen dit nooit meer!'";
+                if (id === 1) return "Rayan: 'Bro alsjeblieft geen brief naar huis, m'n vader maakt me af! We regelen die schade zelf wel met de bedrijfsleider!'";
+                if (id === 2) return "Anouk: 'Alsjeblieft geen gezeik met onze ouders en school, we lossen dit nu gelijk onderling op.'";
+                if (id === 3) return "Mo: 'Nee man agent, m'n ouders worden gek als u belt. We zetten de muziek nu echt uit en gaan weg.'";
+                if (id === 4) return "Noa: 'Mijn ouders vermoorden me als ze horen over die drank... we gooien alles nu meteen in de prullenbak!'";
+            }
+
+            if (lower.includes('waarom') || lower.includes('bes') || lower.includes('gevel') || lower.includes('deuk') || lower.includes('kar') || lower.includes('wagentje') || lower.includes('vecht') || lower.includes('tas') || lower.includes('muziek') || lower.includes('speaker') || lower.includes('box') || lower.includes('vape') || lower.includes('drank') || lower.includes('alcohol') || lower.includes('gebeurd')) {
+                if (id === 0) return "Sem: 'Milan zei dat het grappig was voor TikTok!' Milan: 'Kop dicht Sem! Sorry agent, we dachten dat het een grapje was, maar we snappen dat het gevaarlijk is.'";
+                if (id === 1) return "Levi: 'Jayden en Daan ramden die karren ertegenaan!' Daan: 'Niet zo snitchen Levi! Maar oké agent, we waren gewoon dom aan het klooien.'";
+                if (id === 2) return "Jesse: 'Hij liep roddels te verspreiden over m'n vriendin!' Lars: 'Dat was gewoon een geintje en jij sloopt meteen m'n schooltas!'";
+                if (id === 3) return "Tariq: 'We luisterden gewoon een playlistje, we hadden niet door dat die kinderwagens er last van hadden man.'";
+                if (id === 4) return "Damian: 'We zaten hier gewoon te chillen. Die rum-cola had ik van een oudere jongen gekocht, was niet slim.'";
+            }
+
+            if (lower.includes('weg') || lower.includes('verlaat') || lower.includes('vorder') || lower.includes('boete') || lower.includes('bureau') || lower.includes('halt') || lower.includes('mee')) {
+                if (id === 0) return "Liam: 'Niet meenemen alsjeblieft! We ruimen alle besjes en takken nu direct op en gaan meteen naar huis.'";
+                if (id === 1) return "Jayden: 'Oké agent, geen boete aub! We zetten de wagentjes nu netjes terug op hun plek en lopen weg.'";
+                if (id === 2) return "Finn: 'We gaan al uit elkaar agent. Jesse betaalt die tas en we gaan direct de school in naar de les.'";
+                if (id === 3) return "Tariq: 'Is goed wout, ik pak de speaker al in m'n tas. We fietsen nu meteen weg richting het bosbad.'";
+                if (id === 4) return "Stijn: 'Hier is m'n vape agent, neem maar in. We ruimen alle blikjes nu op en verlaten de speeltuin direct.'";
+            }
+
+            const dynamicResponses = [
+                "Milan: 'We luisteren naar wat u zegt agent. Zeg maar wat we moeten doen.'",
+                "Sem: 'Kunnen we dit alsjeblieft oplossen met een waarschuwing? We hebben onze les echt geleerd.'",
+                "Liam: 'We werken gewoon netjes mee hoor meneer, we willen echt geen problemen veroorzaken.'",
+                "Milan: 'We begrijpen de situatie nu agent, we zullen niet meer brutaal doen.'"
+            ];
+            return dynamicResponses[turnCount % dynamicResponses.length];
+        }
 
         // ASTMA Invoer & Realtime Opslaan
         function setupASTMASync() {
@@ -774,7 +844,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 });
             });
 
-            // Input Enter key support voor chat
             document.getElementById('jeugd-chat-input')?.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); window.sendJeugdChat(); }
             });
