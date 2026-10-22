@@ -28,9 +28,12 @@
             position: absolute; background: var(--white); border: 2px solid var(--primary); 
             padding: 8px 12px; border-radius: 6px; cursor: grab; font-weight: bold; 
             pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.2); user-select: none; 
-            display: flex; align-items: center; gap: 8px; white-space: nowrap; touch-action: none; z-index: 1001;
+            display: flex; align-items: center; gap: 8px; 
+            /* Aangepast: zinnen kunnen nu netjes over meerdere regels lopen */
+            white-space: normal; max-width: 420px; word-break: break-word;
+            touch-action: none; z-index: 1001;
         }
-        .delete-icon { color: var(--accent); cursor: pointer; font-size: 1.1em; }
+        .delete-icon { color: var(--accent); cursor: pointer; font-size: 1.1em; margin-left: 6px; flex-shrink: 0; }
 
         .content-container { padding: 30px; max-width: 900px; margin: 20px auto; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; }
         .control-panel { background: var(--white); padding: 10px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; border-top: 1px solid #ddd; z-index: 1500; }
@@ -136,9 +139,9 @@
                     <option value="Mike">Mike</option>
                 </select>
                 <textarea id="secretInput" placeholder="Typ hier je zin..."></textarea>
-                <button onclick="sendToBoard()" style="background:#555; color:white; border:none; padding:10px; width:100%; border-radius:8px; cursor:pointer;">Zet op bord</button>
-                <button onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Start de les</button>
-                <button onclick="resetInputs()" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; margin-top:15px;">Reset invoer</button>
+                <button type="button" onclick="sendToBoard()" style="background:#555; color:white; border:none; padding:10px; width:100%; border-radius:8px; cursor:pointer;">Zet op bord</button>
+                <button type="button" onclick="login()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Start de les</button>
+                <button type="button" onclick="resetInputs()" style="background:none; border:none; color:#888; text-decoration:underline; cursor:pointer; margin-top:15px;">Reset invoer</button>
             </div>
         </div>
     </div>
@@ -302,10 +305,19 @@
         window.login = () => {
             const naam = document.getElementById('studentName').value.trim();
             const klas = document.getElementById('classSelect').value;
+            const secret = document.getElementById('secretInput').value.trim();
+
             if(!naam) return alert("Vul je naam in!");
             if(!klas) return alert("Kies een klas!");
+
             window.currentClass = klas;
             window.currentStudentName = naam;
+
+            // Als er al een zin in het vak stond bij het klikken op 'Start de les', sturen we die direct naar het digibord
+            if (secret) {
+                window.sendToBoard();
+            }
+
             document.getElementById('main-nav').style.display = 'flex';
             document.getElementById('feed-class-title').textContent = klas;
             window.showScreen(2);
@@ -444,11 +456,44 @@
             sets[id].forEach((t, i) => push(ref(db, `classes/${window.currentClass}/labels/s${id}`), { text: t, x: 50, y: 80 + (i*60) }));
         };
 
+        // ═══════════════════════════════════════════════════════════════════
+        // ZIN NAAR HET DIGIBORD STUREN (VERBETERD)
+        // ═══════════════════════════════════════════════════════════════════
         window.sendToBoard = () => {
-            const secret = document.getElementById('secretInput').value;
-            if(!window.currentClass || !secret.trim()) return;
-            push(ref(db, `classes/${window.currentClass}/labels/s3`), { text: secret, x: 150, y: 150 });
-            document.getElementById('secretInput').value = "";
+            // Klas ophalen uit sessie OF direct uit de dropdown (als de les nog niet gestart is)
+            const klas = window.currentClass || document.getElementById('classSelect').value;
+            const secret = document.getElementById('secretInput').value.trim();
+            const naam = window.currentStudentName || document.getElementById('studentName').value.trim();
+
+            if (!klas) {
+                alert("Kies eerst een klas!");
+                return;
+            }
+            if (!secret) {
+                alert("Typ eerst een zin!");
+                return;
+            }
+
+            // Tekst opmaken met naam (indien ingevuld) zodat duidelijk is van wie de zin is
+            const labelText = naam ? `${naam}: "${secret}"` : secret;
+
+            // Zorg voor lichte willekeurige spreiding zodat zinnen niet exact over elkaar vallen
+            const randomX = Math.floor(Math.random() * 250) + 120;
+            const randomY = Math.floor(Math.random() * 200) + 100;
+
+            push(ref(db, `classes/${klas}/labels/s3`), { 
+                text: labelText, 
+                x: randomX, 
+                y: randomY 
+            }).then(() => {
+                document.getElementById('secretInput').value = "";
+                // Toon alleen melding als de leerling nog op het loginscherm staat en handmatig klikte
+                if (!window.currentClass) {
+                    alert("✓ Je zin staat nu op het digibord van klas " + klas + "!");
+                }
+            }).catch(err => {
+                alert("Er ging iets mis bij het plaatsen van de zin: " + err.message);
+            });
         };
 
         function resizeCanvas(id) {
