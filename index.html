@@ -108,6 +108,8 @@
         <button class="nav-btn" onclick="showScreen(6)">5. Oefening A</button>
         <button class="nav-btn" onclick="showScreen(7)">6. Oefening B</button>
         <button class="nav-btn" onclick="showScreen(8)">7. Mutatie Jeugd</button>
+        <!-- Nieuwe Resetknop voor docent / klas -->
+        <button class="nav-btn" style="background:#c0392b;" onclick="resetAllData()">🗑️ Reset Alles</button>
     </nav>
 
     <!-- Oorspronkelijk Inlogscherm -->
@@ -459,6 +461,43 @@
             document.getElementById('studentName').value = "";
             document.getElementById('classSelect').selectedIndex = 0;
             document.getElementById('secretInput').value = "";
+        };
+
+        // ═══════════════════════════════════════════════════════════════════
+        // RESET FUNCTIE: WIST ALLE BORDINVOER & INGELEVERDE TEKSTEN VOOR DE KLAS
+        // ═══════════════════════════════════════════════════════════════════
+        window.resetAllData = () => {
+            const klas = window.currentClass || document.getElementById('classSelect').value;
+            if (!klas) {
+                alert("Kies eerst een klas of log in om gegevens te wissen.");
+                return;
+            }
+            if (!confirm(`Weet je zeker dat je alle bordinvoer (zinnen/labels/tekeningen) én alle ingeleverde teksten van klas "${klas}" wilt wissen?`)) {
+                return;
+            }
+
+            // 1. Verwijder alle bordinvoer (labels en tekeningen) in Firebase
+            remove(ref(db, `classes/${klas}/labels`));
+            remove(ref(db, `classes/${klas}/drawings`));
+
+            // 2. Verwijder alle ingeleverde mutaties en feedback in Firebase
+            remove(ref(db, `classes/${klas}/mutaties_jeugd`));
+
+            // 3. Wis lokale invoervelden van het formulier en de geheime zin
+            ['aanleiding', 'situatie', 'toedracht', 'maatregelen', 'afhandeling'].forEach(f => {
+                const el = document.getElementById(`astma-${f}`);
+                if (el) el.value = '';
+            });
+            const secret = document.getElementById('secretInput');
+            if (secret) secret.value = '';
+
+            // 4. Wis lokaal getekende canvasen
+            [3, 4, 5].forEach(id => {
+                const canvas = document.getElementById(`canvas-${id}`);
+                if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            });
+
+            alert(`✓ Alle teksten en bordinvoer voor klas "${klas}" zijn succesvol gewist!`);
         };
 
         // ═══════════════════════════════════════════════════════════════════
