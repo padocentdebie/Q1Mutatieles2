@@ -50,7 +50,7 @@
         .oc-body { display: grid; grid-template-columns: 1.2fr 1fr; background: #1a1a1a; }
         @media (max-width: 900px) { .oc-body { grid-template-columns: 1fr; } }
         .oc-text-box { padding: 16px; font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 1.6; color: #33ff88; white-space: pre-wrap; }
-        #jeugd-streetview { height: 250px; width: 100%; border: none; background: #222; }
+        #jeugd-map { height: 240px; width: 100%; border: none; }
         .oc-controls { padding: 10px 16px; background: #ecf0f1; display: flex; gap: 10px; align-items: center; border-top: 1px solid #ddd; flex-wrap: wrap; }
         .btn-oc-play { background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-oc-stop { background: #7f8c8d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
@@ -205,15 +205,12 @@
                 </div>
                 <div class="oc-body">
                     <div class="oc-text-box" id="jeugd-oc-tekst">Laden van melding...</div>
-                    <!-- Google Street View iframe ipv Leaflet -->
-                    <iframe id="jeugd-streetview" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe id="jeugd-map" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
                 <div class="oc-controls">
                     <button class="btn-oc-play" onclick="speakJeugdOC()">▶ Voorlezen</button>
                     <button class="btn-oc-stop" onclick="stopJeugdOC()">⏹ Stop</button>
-                    <a id="jeugd-sv-link" href="#" target="_blank" style="font-size:0.85rem; color:var(--primary); font-weight:bold; text-decoration:none; margin-left:auto;">
-                        <i class="fa-solid fa-street-view"></i> 360° Openen in Google Maps
-                    </a>
+                    <span style="font-size:0.85rem; color:#555; margin-left:auto;">📍 Locatie Amersfoort interactief weergegeven</span>
                 </div>
             </div>
 
@@ -465,15 +462,13 @@
         };
 
         // ═══════════════════════════════════════════════════════════════════
-        // LOGICA VOOR SCHERM 7 (MUTATIE JEUGD - MET GOOGLE STREET VIEW)
+        // LOGICA VOOR SCHERM 7 (MUTATIE JEUGD - MANIER 1 GROEPSCHAT + STREETVIEW)
         // ═══════════════════════════════════════════════════════════════════
         const JEUGD_CASUSSEN = [
             {
                 id: 0,
                 locatieNaam: "Kamp, Amersfoort",
                 coords: [52.1586, 5.3922],
-                heading: 45,
-                pitch: 0,
                 groepNaam: "Liam (14), Milan (15), Sem (14) & Sophie (14)",
                 ocText: `Hier het Operationeel Centrum voor de eenheid in Amersfoort.
 Melding jeugdoverlast op de Kamp ter hoogte van de Bloemendalsestraat.
@@ -502,8 +497,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 id: 1,
                 locatieNaam: "Willem Barentszstraat (Aldi), Amersfoort",
                 coords: [52.1648, 5.3732],
-                heading: 280,
-                pitch: 0,
                 groepNaam: "Jayden (15), Daan (16), Rayan (15) & Levi (15)",
                 ocText: `Hier het Operationeel Centrum.
 Melding van vernieling en overlast bij de Aldi aan de Willem Barentszstraat (Neptunusplein).
@@ -531,8 +524,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 id: 2,
                 locatieNaam: "Utrechtseweg 293, Amersfoort",
                 coords: [52.1408, 5.3468],
-                heading: 140,
-                pitch: 0,
                 groepNaam: "Jesse (16), Lars (16), Anouk (15) & Finn (16)",
                 ocText: `Eenheid Amersfoort-Zuid, met spoed naar de Utrechtseweg 293 nabij de school.
 Melder ziet een groep scholieren die met elkaar op de vuist gaan. Er wordt over en weer geschopt, geduwd en tassen worden over straat getrapt.
@@ -560,8 +551,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 id: 3,
                 locatieNaam: "Barchman Wuytierslaan 57, Amersfoort",
                 coords: [52.1528, 5.3524],
-                heading: 260,
-                pitch: 0,
                 groepNaam: "Tariq (16), Kasper (15), Bram (16) & Mo (15)",
                 ocText: `Hier het Operationeel Centrum.
 Melding van overlast bij DierenPark Amersfoort aan de Barchman Wuytierslaan 57.
@@ -590,8 +579,6 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                 id: 4,
                 locatieNaam: "Liendertseweg 230, Amersfoort",
                 coords: [52.1627, 5.4038],
-                heading: 100,
-                pitch: 0,
                 groepNaam: "Stijn (15), Damian (15) & Noa (14)",
                 ocText: `Hier het Operationeel Centrum.
 Melding van omwonenden van het wijkpark aan de Liendertseweg 230.
@@ -627,7 +614,7 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
         function initJeugdScreen() {
             if (!window.currentClass) return;
             assignJeugdCasus();
-            setupJeugdStreetView();
+            setupJeugdMap();
             setupASTMASync();
             setupJeugdFeed();
         }
@@ -665,20 +652,11 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
             }
         }
 
-        function setupJeugdStreetView() {
+        function setupJeugdMap() {
             if (!currentJeugdCasus) return;
-            const iframe = document.getElementById('jeugd-streetview');
-            const link = document.getElementById('jeugd-sv-link');
-            const lat = currentJeugdCasus.coords[0];
-            const lng = currentJeugdCasus.coords[1];
-            const heading = currentJeugdCasus.heading || 0;
-            const pitch = currentJeugdCasus.pitch || 0;
-
+            const iframe = document.getElementById('jeugd-map');
             if (iframe) {
-                iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${GEMINI_API_KEY}&location=${lat},${lng}&heading=${heading}&pitch=${pitch}&fov=85`;
-            }
-            if (link) {
-                link.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+                iframe.src = `https://www.google.com/maps/embed/v1/streetview?key=${GEMINI_API_KEY}&location=${currentJeugdCasus.coords[0]},${currentJeugdCasus.coords[1]}`;
             }
         }
 
@@ -822,11 +800,49 @@ GEDRAG & GROEPSDYNAMIEK (MANIER 1):
                     }
                     html += `</div>`;
 
+                    // Feedback sectie en invoerveld voor nakijken
+                    html += `<div style="margin-top:10px; padding-top:8px; border-top:1px solid #e0e0e0;">`;
+                    html += `<strong style="font-size:0.82rem; color:#444;"><i class="fa-solid fa-comments"></i> Feedback / Nakijken:</strong>`;
+                    if (item.feedback) {
+                        Object.values(item.feedback).forEach(fb => {
+                            html += `<div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:5px 8px; margin-top:5px; font-size:0.82rem; line-height:1.3;">
+                                <strong style="color:var(--primary);">${escapeHtml(fb.reviewer)}:</strong> ${escapeHtml(fb.text)}
+                            </div>`;
+                        });
+                    } else {
+                        html += `<div style="color:#888; font-size:0.8rem; font-style:italic; margin-top:3px;">Nog geen feedback geplaatst.</div>`;
+                    }
+
+                    html += `<div style="display:flex; gap:6px; margin-top:8px;">
+                        <input type="text" id="fb-input-${escapeHtml(key)}" placeholder="${isMine ? 'Reageer op feedback...' : 'Typ feedback / beoordeling...'}" onkeydown="if(event.key==='Enter') submitFeedback('${escapeHtml(key)}')" style="padding:6px 8px; font-size:0.82rem; margin:0; flex:1; border:1px solid #ccc; border-radius:4px;">
+                        <button type="button" onclick="submitFeedback('${escapeHtml(key)}')" style="background:#27ae60; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.82rem; font-weight:bold;">Verstuur</button>
+                    </div>`;
+                    html += `</div>`;
+
                     card.innerHTML = html;
                     feed.appendChild(card);
                 });
             });
         }
+
+        window.submitFeedback = (targetKey) => {
+            if (!window.currentStudentName || !window.currentClass) return;
+            const input = document.getElementById(`fb-input-${targetKey}`);
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+
+            push(ref(db, `classes/${window.currentClass}/mutaties_jeugd/${targetKey}/feedback`), {
+                reviewer: window.currentStudentName,
+                text: text,
+                timestamp: Date.now()
+            }).then(() => {
+                update(ref(db, `classes/${window.currentClass}/mutaties_jeugd/${targetKey}/reviews`), {
+                    [encodeKey(window.currentStudentName)]: true
+                });
+                input.value = '';
+            });
+        };
 
         window.reviewMutatie = (targetKey) => {
             if (!window.currentStudentName || !window.currentClass) return;
